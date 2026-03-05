@@ -1,0 +1,12 @@
+@variant dark (&:where(.dark, .dark *));
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+.exp-card {
+  background-color: #f9fafb;
+}
+
+.dark .exp-card {
+  background-color: #13151f;
+}
