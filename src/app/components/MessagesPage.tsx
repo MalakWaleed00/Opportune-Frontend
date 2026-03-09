@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Send, Search, Bot, User } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -134,7 +134,10 @@ export default function MessagesPage() {
               </div>
               <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 flex gap-1.5 items-center">
                 {[0, 1, 2].map(i => (
-                  <span key={i} className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                  <span
+                    key={i}
+                    className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+                  />
                 ))}
               </div>
             </div>
@@ -151,8 +154,13 @@ export default function MessagesPage() {
                 bg-white dark:bg-[#1a1d27] border-gray-200 dark:border-gray-700
                 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                 focus:border-black dark:focus:border-gray-500" />
-            <button onClick={sendMessage} disabled={loading || !input.trim()}
-              className="bg-black dark:bg-white text-white dark:text-black p-3 rounded-xl hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed">
+            <button
+              onClick={sendMessage}
+              disabled={loading || !input.trim()}
+              className="bg-black dark:bg-white text-white dark:text-black p-3 rounded-xl hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Send message"
+              title="Send message"
+            >
               <Send size={18} />
             </button>
           </div>

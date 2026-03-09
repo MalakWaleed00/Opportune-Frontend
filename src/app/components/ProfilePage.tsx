@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   MapPin, Link, Calendar, Briefcase, Download, Mail,
-  Pencil, X, Check, User, GraduationCap
+  Pencil, X, Check, User, GraduationCap, MessageSquare
 } from "lucide-react";
 
 type Experience = { role: string; company: string; year: string };
@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState<Profile>(DEFAULT);
   const [editing, setEditing] = useState(false);
   const [skillInput, setSkillInput] = useState("");
+  const [interviewedExp, setInterviewedExp] = useState<Set<number>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   const startEdit = () => { setDraft(profile); setEditing(true); };
@@ -51,7 +52,7 @@ export default function ProfilePage() {
   const save = () => { setProfile(draft); setEditing(false); };
   const set = (k: keyof Profile, v: string) => setDraft(d => ({ ...d, [k]: v }));
 
-  const addSkill = (e: React.KeyboardEvent) => {
+  const addSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
     const val = skillInput.trim();
@@ -64,6 +65,14 @@ export default function ProfilePage() {
     setDraft(d => { const ex = [...d.experience]; ex[i] = { ...ex[i], [k]: v }; return { ...d, experience: ex }; });
   const addExp = () => setDraft(d => ({ ...d, experience: [...d.experience, { role: "", company: "", year: "" }] }));
   const removeExp = (i: number) => setDraft(d => ({ ...d, experience: d.experience.filter((_, idx) => idx !== i) }));
+
+  const toggleInterview = (i: number) => {
+    setInterviewedExp(prev => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
 
   const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,10 +111,22 @@ export default function ProfilePage() {
             </div>
             {editing && (
               <>
-                <button onClick={() => fileRef.current?.click()} className="absolute bottom-1 right-1 w-7 h-7 bg-black rounded-full flex items-center justify-center shadow">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="absolute bottom-1 right-1 w-7 h-7 bg-black rounded-full flex items-center justify-center shadow"
+                  aria-label="Change profile picture"
+                  title="Change profile picture"
+                >
                   <Pencil size={11} className="text-white" />
                 </button>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhoto} />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onPhoto}
+                  aria-label="Upload profile picture"
+                />
               </>
             )}
           </div>
@@ -143,7 +164,7 @@ export default function ProfilePage() {
 
           {editing
             ? <input value={draft.role} onChange={e => set("role", e.target.value)} className={`${inp} text-sm font-semibold w-64 mt-1`} placeholder="Job title" />
-            :             <p className="text-gray-600 dark:text-gray-300 font-semibold">{profile.role}</p>}
+            : <p className="text-gray-600 dark:text-gray-300 font-semibold">{profile.role}</p>}
         </div>
 
         {/* Meta row */}
@@ -151,14 +172,14 @@ export default function ProfilePage() {
           <span className="flex items-center gap-1">
             <MapPin size={13} />
             {editing
-              ? <input value={draft.location} onChange={e => set("location", e.target.value)} className={`${inp} w-40`} />
+              ? <input value={draft.location} onChange={e => set("location", e.target.value)} className={`${inp} w-40`} placeholder="Location" aria-label="Location" />
               : profile.location}
           </span>
           <span className="flex items-center gap-1">
             <Link size={13} />
             {editing
-              ? <input value={draft.website} onChange={e => set("website", e.target.value)} className={`${inp} w-44`} />
-                              : <a href={`https://${profile.website}`} target="_blank" rel="noreferrer" className="text-gray-400 dark:text-gray-400 hover:underline">{profile.website}</a>}
+              ? <input value={draft.website} onChange={e => set("website", e.target.value)} className={`${inp} w-44`} placeholder="Website or portfolio URL" aria-label="Website or portfolio URL" />
+              : <a href={`https://${profile.website}`} target="_blank" rel="noreferrer" className="text-gray-400 dark:text-gray-400 hover:underline">{profile.website}</a>}
           </span>
           <span className="flex items-center gap-1"><Calendar size={13} /> Joined 2024</span>
         </div>
@@ -181,7 +202,7 @@ export default function ProfilePage() {
             {/* About */}
             <Section label="About">
               {editing
-                ? <textarea rows={4} value={draft.about} onChange={e => set("about", e.target.value)} className={`${inp} w-full resize-none`} />
+                ? <textarea rows={4} value={draft.about} onChange={e => set("about", e.target.value)} className={`${inp} w-full resize-none`} placeholder="Tell recruiters about yourself" aria-label="About" />
                 : <p className="text-gray-600 text-sm leading-relaxed">{profile.about}</p>}
             </Section>
 
@@ -191,7 +212,11 @@ export default function ProfilePage() {
                 {cur.skills.map(s => (
                   <span key={s} className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 rounded-full px-3 py-1 text-sm text-gray-700">
                     {s}
-                    {editing && <button onClick={() => removeSkill(s)} className="text-gray-400 hover:text-red-500"><X size={11} /></button>}
+                    {editing && (
+                      <button onClick={() => removeSkill(s)} className="text-gray-400 hover:text-red-500" aria-label={`Remove skill ${s}`}>
+                        <X size={11} />
+                      </button>
+                    )}
                   </span>
                 ))}
                 {editing && (
@@ -208,7 +233,7 @@ export default function ProfilePage() {
                   <GraduationCap size={16} className="text-gray-500" />
                 </div>
                 {editing
-                  ? <input value={draft.education} onChange={e => set("education", e.target.value)} className={`${inp} flex-1`} />
+                  ? <input value={draft.education} onChange={e => set("education", e.target.value)} className={`${inp} flex-1`} placeholder="Education" aria-label="Education" />
                   : <p className="text-gray-700 text-sm pt-1.5">{profile.education}</p>}
               </div>
             </Section>
@@ -236,11 +261,25 @@ export default function ProfilePage() {
                           <p className="font-semibold text-gray-900 text-sm">{exp.role}</p>
                           <p className="text-gray-600 text-xs">{exp.company}</p>
                           <p className="text-gray-400 text-xs mt-0.5">{exp.year}</p>
+                          {/* Interview button */}
+                          <button
+                            onClick={() => toggleInterview(i)}
+                            className={`mt-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
+                              interviewedExp.has(i)
+                                ? "bg-green-100 text-green-700 border border-green-200"
+                                : "bg-gray-900 text-white hover:bg-gray-700"
+                            }`}
+                          >
+                            <MessageSquare size={11} />
+                            {interviewedExp.has(i) ? "Interviewed ✓" : "Interview"}
+                          </button>
                         </>
                       )}
                     </div>
                     {editing && (
-                      <button onClick={() => removeExp(i)} className="text-gray-300 hover:text-red-500 mt-1"><X size={13} /></button>
+                      <button onClick={() => removeExp(i)} className="text-gray-300 hover:text-red-500 mt-1" aria-label={`Remove experience ${exp.role || "entry"}`}>
+                        <X size={13} />
+                      </button>
                     )}
                   </div>
                 ))}

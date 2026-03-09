@@ -1,3 +1,4 @@
+import React from "react";
 import { NavLink } from "react-router";
 import { Briefcase, BookOpen, MessageSquare, UserCircle, Mail } from "lucide-react";
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User } from "lucide-react";
 
 const ROLES = ["Frontend", "Backend", "Full Stack", "DevOps", "Data Science"];
@@ -126,7 +126,10 @@ export default function InterviewPrepPage() {
                 </div>
                 <div className="bg-[#1a1d27] border border-gray-700 rounded-2xl px-4 py-3 flex gap-1.5 items-center">
                   {[0, 1, 2].map((i) => (
-                    <span key={i} className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                    <span
+                      key={i}
+                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    />
                   ))}
                 </div>
               </div>
@@ -142,8 +145,13 @@ export default function InterviewPrepPage() {
                 placeholder="Type your answer… (Enter to send)"
                 className="flex-1 border rounded-xl px-4 py-3 text-sm resize-none outline-none transition-colors bg-[#1a1d27] border-gray-700 text-white placeholder-gray-500 focus:border-gray-500"
               />
-              <button onClick={sendMessage} disabled={loading || !input.trim()}
-                className="bg-white text-black p-3 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="bg-white text-black p-3 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Send message"
+                title="Send message"
+              >
                 <Send size={18} />
               </button>
             </div>

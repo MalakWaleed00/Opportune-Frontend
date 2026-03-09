@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 
 interface Job {
@@ -57,7 +57,11 @@ function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boo
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{job.company}</p>
           </div>
         </div>
-        <button className="text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors mt-1">
+        <button
+          className="text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors mt-1"
+          aria-label="Save job"
+          title="Save job"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
@@ -151,6 +155,8 @@ export function JobsPage() {
           <select
             value={filterType}
             onChange={e => setFilterType(e.target.value)}
+            aria-label="Filter jobs by type"
+            title="Filter jobs by type"
             className="px-4 py-2.5 rounded-lg text-sm outline-none transition-colors
               bg-white dark:bg-[#1a1d27]
               border border-gray-200 dark:border-gray-700
