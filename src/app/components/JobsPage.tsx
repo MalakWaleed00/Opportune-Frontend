@@ -31,6 +31,9 @@ const allJobs: Job[] = [
 ];
 
 function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boolean }) {
+  // Encode job info for the interview page
+  const jobParam = encodeURIComponent(JSON.stringify({ id: job.id, title: job.title, company: job.company, tags: job.tags, description: job.description }));
+
   return (
     <div className="
       bg-white dark:bg-[#1a1d27]
@@ -98,11 +101,22 @@ function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boo
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <button className="flex-1 bg-black dark:bg-white text-white dark:text-black py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
           Apply Now
         </button>
-        <button className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+        <Link
+          to={`/interview?job=${jobParam}`}
+          className="px-3 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center gap-1.5
+            border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-400
+            hover:bg-violet-50 dark:hover:bg-violet-900/20"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          Interview
+        </Link>
+        <button className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
           Details
         </button>
       </div>
@@ -193,6 +207,14 @@ export function JobsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredJobs.map(job => <JobCard key={job.id} job={job} />)}
           </div>
+          {filteredJobs.length === 0 && (
+            <div className="text-center py-16 text-gray-400 dark:text-gray-600">
+              <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p className="text-sm">No jobs found matching your search.</p>
+            </div>
+          )}
         </section>
       </div>
     </div>
