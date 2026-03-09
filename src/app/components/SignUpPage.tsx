@@ -192,7 +192,7 @@ export function SignUpPage() {
       name: formData.name,
       email: formData.email,
       password: formData.password,
-      role: formData.userType === "jobseeker" ? "JOB_SEEKER" : "RECRUITER",
+      role: formData.userType === "jobseeker" ? "JOBSEEKER" : "RECRUITER",
       cvLink: formData.cvLink,
       profilePicLink: formData.profilePicture,
       country: formData.country,
@@ -207,7 +207,7 @@ export function SignUpPage() {
     setIsSubmitted(true);
 
     setTimeout(() => {
-      navigate("/login");
+      navigate("/");
     }, 1500);
 
   } catch (error: any) {
