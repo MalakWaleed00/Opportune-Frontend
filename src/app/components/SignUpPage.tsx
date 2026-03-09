@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { register } from "../../api/authService";
 
@@ -510,6 +510,8 @@ export function SignUpPage() {
                         type="button"
                         onClick={() => handleRemoveSkill(skill)}
                         className="hover:text-destructive transition-colors"
+                        aria-label={`Remove skill ${skill}`}
+                        title={`Remove skill ${skill}`}
                       >
                         <svg
                           className="w-4 h-4"
