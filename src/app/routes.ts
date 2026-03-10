@@ -12,6 +12,7 @@ import MessagesPage from "./components/MessagesPage";
 import { ApplicationTrackerPage } from "./components/Applicationtrackerpage";
 // It must be imported exactly like this in routes.ts:
 import { AnalyticsDashboardpage } from "./components/Analyticsdashboardpage";
+import { SettingsPage } from "./components/SettingsPage";
 
 
 
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "/messages",        Component: MessagesPage },
       { path: "/tracker",         Component: ApplicationTrackerPage },
       { path: "/analytics",       Component: AnalyticsDashboardpage },
+      { path: "/settings",        Component: SettingsPage },
     ],
   },
 ]);

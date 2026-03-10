@@ -30,7 +30,7 @@ const allJobs: Job[] = [
   { id: '10', title: 'QA Engineer',          company: 'QualityFirst', location: 'Denver, CO',      type: 'Full-time', salary: '$85k - $110k',  description: 'Ensure quality through comprehensive testing strategies...',          tags: ['Automation', 'Selenium', 'Jest'],         postedDate: '3 weeks ago',  logo: '✅' },
 ];
 
-function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boolean }) {
+function JobCard({ job }: { job: Job }) {
   // Encode job info for the interview page
   const jobParam = encodeURIComponent(JSON.stringify({ id: job.id, title: job.title, company: job.company, tags: job.tags, description: job.description }));
 
@@ -41,6 +41,7 @@ function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boo
       rounded-xl p-6
       hover:shadow-md dark:hover:shadow-black/40
       transition-all duration-200
+      flex flex-col h-full
     ">
       {/* Top row */}
       <div className="flex items-start justify-between mb-4">
@@ -51,11 +52,6 @@ function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boo
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
               {job.title}
-              {isRecommended && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                  Recommended
-                </span>
-              )}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{job.company}</p>
           </div>
@@ -92,7 +88,7 @@ function JobCard({ job, isRecommended = false }: { job: Job; isRecommended?: boo
       <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-2">{job.description}</p>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 mt-auto">
         {job.tags.map(tag => (
           <span key={tag} className="px-3 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
             {tag}
@@ -194,7 +190,7 @@ export function JobsPage() {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recommended for You</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommendedJobs.map(job => <JobCard key={job.id} job={job} isRecommended />)}
+            {recommendedJobs.map(job => <JobCard key={job.id} job={job} />)}
           </div>
         </section>
 

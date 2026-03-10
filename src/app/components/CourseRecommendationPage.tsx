@@ -1,5 +1,5 @@
 import { BookOpen } from "lucide-react";
-
+import React from 'react';
 const PLATFORM_COLORS: Record<string, string> = {
   Udemy:        "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   Coursera:     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
