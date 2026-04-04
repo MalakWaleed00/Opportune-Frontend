@@ -3,11 +3,12 @@ import { NavLink } from "react-router";
 import { Briefcase, BookOpen, UserCircle, Mail, LayoutDashboard, KanbanSquare, Settings } from "lucide-react";
 
 const links = [
+  
+  { to: "/jobs",      icon: <Briefcase size={18} />,       label: "Job Board" },
+  { to: "/courses",   icon: <BookOpen size={18} />,        label: "Course Board" },
+  { to: "/messages",  icon: <Mail size={18} />,            label: "Messages" },
   { to: "/analytics", icon: <LayoutDashboard size={18} />, label: "Analytics Dashboard" },
   { to: "/tracker",   icon: <KanbanSquare size={18} />,    label: "Application Board" },
-  { to: "/jobs",      icon: <Briefcase size={18} />,       label: "Job Search" },
-  { to: "/courses",   icon: <BookOpen size={18} />,        label: "Course" },
-  { to: "/messages",  icon: <Mail size={18} />,            label: "Messages" },
   { to: "/profile",   icon: <UserCircle size={18} />,      label: "Profile" },
   { to: "/settings",  icon: <Settings size={18} />,        label: "Settings" },
 ];
