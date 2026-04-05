@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Monitor, Lock, LogOut, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import axios from 'axios'; 
+// import axios from 'axios';
 
 export function SettingsPage() {
   // --- Theme State ---
@@ -79,8 +79,8 @@ export function SettingsPage() {
 
   // FIXED LOGOUT HANDLER
   const handleLogout = () => {
-    localStorage.removeItem('token'); 
-    navigate('/login'); // <-- This will safely route you without a hard refresh
+    localStorage.removeItem('token');
+    window.location.href = '/'; // Force a full page reload to clear any cached state
   };
 
   const inputClass = "w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors";
