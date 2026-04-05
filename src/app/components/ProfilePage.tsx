@@ -1,69 +1,115 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
 import {
-  MapPin, Link, Calendar, Briefcase, Download,
-  Pencil, X, Check, User, GraduationCap
+  MapPin, Calendar, Briefcase, Download,
+  Pencil, X, Check, User
 } from "lucide-react";
 
 type Experience = { role: string; company: string; year: string };
 
+// 1. Removed: age, website, about, education
 type Profile = {
   name: string;
   handle: string;
   role: string;
-  age: string;
   location: string;
-  website: string;
-  about: string;
   skills: string[];
   experience: Experience[];
   cvLink: string;
-  education: string;
   pp: string;
 };
 
-const DEFAULT: Profile = {
-  name: "Alex Johnson",
-  handle: "@alex_dev",
-  role: "Senior Frontend Developer",
-  age: "27",
-  location: "San Francisco, CA",
-  website: "github.com/alexjohnson",
-  about: "Passionate Frontend Developer with 3+ years of experience building responsive, user-friendly web applications using React and Tailwind CSS. Currently looking for new opportunities.",
-  skills: ["React", "TypeScript", "Tailwind CSS", "Node.js", "Git"],
-  experience: [
-    { role: "Senior Frontend Developer", company: "TechCorp Inc.", year: "2022 - Present" },
-    { role: "React Developer", company: "StartupXYZ", year: "2020 - 2022" },
-  ],
-  cvLink: "https://drive.google.com/your-cv",
-  education: "B.Sc. Computer Science — UC Berkeley (2019)",
-  pp: "",
-};
-
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<Profile>(DEFAULT);
-  const [draft, setDraft] = useState<Profile>(DEFAULT);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [draft, setDraft] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [skillInput, setSkillInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // 2. RETRIEVING: Fetch data from Spring Boot
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/users/1/profile");
+        
+        // 3. Removed from mapping
+        const fetchedData: Profile = {
+          name: response.data.name || "",
+          handle: response.data.username || "", 
+          role: response.data.roleName || "", 
+          location: response.data.location || "",
+          skills: response.data.skills || [], 
+          experience: response.data.workExperiences?.map((exp: any) => ({
+            role: exp.position,
+            company: exp.company,
+            year: `${exp.startDate || ''} - ${exp.endDate || 'Present'}`
+          })) || [],
+          cvLink: response.data.cvLink || "",
+          pp: response.data.profilePicLink || "",
+        };
+
+        setProfile(fetchedData);
+        setDraft(fetchedData);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // 4. SAVING: Push updates back to Spring Boot
+  const save = async () => {
+    if (!draft) return;
+    try {
+      // 5. Removed from payload
+      const payload = {
+        name: draft.name,
+        username: draft.handle,
+        location: draft.location,
+        cvLink: draft.cvLink,
+        profilePicLink: draft.pp,
+      };
+
+      await axios.put("http://localhost:8080/api/users/1/profile", payload);
+      
+      setProfile(draft);
+      setEditing(false);
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      alert("Failed to save. Check console for errors.");
+    }
+  };
+
   const startEdit = () => { setDraft(profile); setEditing(true); };
-  const cancel = () => setEditing(false);
-  const save = () => { setProfile(draft); setEditing(false); };
-  const set = (k: keyof Profile, v: string) => setDraft(d => ({ ...d, [k]: v }));
+  const cancel = () => { setDraft(profile); setEditing(false); };
+  const set = (k: keyof Profile, v: string) => setDraft(d => d ? { ...d, [k]: v } : null);
 
   const addSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return;
+    if (e.key !== "Enter" || !draft) return;
     e.preventDefault();
     const val = skillInput.trim();
-    if (val && !draft.skills.includes(val)) setDraft(d => ({ ...d, skills: [...d.skills, val] }));
+    if (val && !draft.skills.includes(val)) {
+        setDraft(d => d ? { ...d, skills: [...d.skills, val] } : null);
+    }
     setSkillInput("");
   };
-  const removeSkill = (s: string) => setDraft(d => ({ ...d, skills: d.skills.filter(x => x !== s) }));
+  
+  const removeSkill = (s: string) => setDraft(d => d ? { ...d, skills: d.skills.filter(x => x !== s) } : null);
 
   const updateExp = (i: number, k: keyof Experience, v: string) =>
-    setDraft(d => { const ex = [...d.experience]; ex[i] = { ...ex[i], [k]: v }; return { ...d, experience: ex }; });
-  const addExp = () => setDraft(d => ({ ...d, experience: [...d.experience, { role: "", company: "", year: "" }] }));
-  const removeExp = (i: number) => setDraft(d => ({ ...d, experience: d.experience.filter((_, idx) => idx !== i) }));
+    setDraft(d => { 
+        if (!d) return null;
+        const ex = [...d.experience]; 
+        ex[i] = { ...ex[i], [k]: v }; 
+        return { ...d, experience: ex }; 
+    });
+    
+  const addExp = () => setDraft(d => d ? { ...d, experience: [...d.experience, { role: "", company: "", year: "" }] } : null);
+  
+  const removeExp = (i: number) => setDraft(d => d ? { ...d, experience: d.experience.filter((_, idx) => idx !== i) } : null);
 
   const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,11 +119,13 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
+  if (loading) return <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white flex items-center justify-center">Loading profile...</div>;
+  if (!profile || !draft) return <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white flex items-center justify-center">Profile not found.</div>;
+
   const cur = editing ? draft : profile;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] transition-colors duration-300">
-      {/* Cover */}
       <div className="h-40 bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-900 dark:to-gray-700 relative" />
 
       <div className="max-w-4xl mx-auto px-6">
@@ -98,7 +146,7 @@ export default function ProfilePage() {
                 >
                   <Pencil size={11} className="text-white dark:text-black" />
                 </button>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhoto} aria-label="Upload profile picture" title="Upload profile picture" />
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPhoto} aria-label="Upload profile picture" />
               </>
             )}
           </div>
@@ -147,13 +195,11 @@ export default function ProfilePage() {
             <div className="flex flex-wrap gap-3 items-center mb-1">
               <input value={draft.name} onChange={e => set("name", e.target.value)} className={`${inp} text-xl font-bold w-44`} placeholder="Name" />
               <input value={draft.handle} onChange={e => set("handle", e.target.value)} className={`${inp} text-sm w-32`} placeholder="@handle" />
-              <input value={draft.age} onChange={e => set("age", e.target.value)} className={`${inp} text-sm w-16`} placeholder="Age" />
             </div>
           ) : (
             <div className="flex items-center gap-3 mb-0.5">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{profile.name}</h2>
               <span className="text-gray-500 dark:text-gray-400 text-sm">{profile.handle}</span>
-              <span className="text-gray-500 dark:text-gray-400 text-sm">· {profile.age}</span>
             </div>
           )}
           {editing
@@ -169,12 +215,6 @@ export default function ProfilePage() {
               ? <input value={draft.location} onChange={e => set("location", e.target.value)} className={`${inp} w-40`} placeholder="Location" />
               : profile.location}
           </span>
-          <span className="flex items-center gap-1">
-            <Link size={13} />
-            {editing
-              ? <input value={draft.website} onChange={e => set("website", e.target.value)} className={`${inp} w-44`} placeholder="Website or portfolio URL" />
-              : <a href={`https://${profile.website}`} target="_blank" rel="noreferrer" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors">{profile.website}</a>}
-          </span>
           <span className="flex items-center gap-1"><Calendar size={13} /> Joined 2024</span>
         </div>
 
@@ -189,26 +229,18 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 pb-12">
-          {/* Left col */}
-          <div className="md:col-span-3 space-y-6">
-
-            {/* About */}
-            <Section label="About">
-              {editing
-                ? <textarea rows={4} value={draft.about} onChange={e => set("about", e.target.value)} className={`${inp} w-full resize-none`} placeholder="Tell recruiters about yourself" />
-                : <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{profile.about}</p>}
-            </Section>
-
-            {/* Skills */}
+        {/* Main content - Adjusted grid for fewer items */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+          
+          {/* Left col: Skills and CV Link */}
+          <div className="space-y-6">
             <Section label="Skills">
               <div className="flex flex-wrap gap-2">
                 {cur.skills.map(s => (
                   <span key={s} className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 text-sm text-gray-700 dark:text-gray-300">
                     {s}
                     {editing && (
-                      <button onClick={() => removeSkill(s)} aria-label={`Remove skill ${s}`} title={`Remove skill ${s}`} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400">
+                      <button onClick={() => removeSkill(s)} aria-label={`Remove skill ${s}`} className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400">
                         <X size={11} />
                       </button>
                     )}
@@ -226,23 +258,15 @@ export default function ProfilePage() {
               </div>
             </Section>
 
-            {/* Education */}
-            <Section label="Education">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <GraduationCap size={16} className="text-gray-500 dark:text-gray-400" />
-                </div>
-                {editing
-                  ? <input value={draft.education} onChange={e => set("education", e.target.value)} className={`${inp} flex-1`} placeholder="Education" />
-                  : <p className="text-gray-700 dark:text-gray-300 text-sm pt-1.5">{profile.education}</p>}
-              </div>
+            <Section label="CV / Resume">
+              {editing
+                ? <input value={draft.cvLink} onChange={e => set("cvLink", e.target.value)} className={`${inp} w-full`} placeholder="https://..." />
+                : <a href={profile.cvLink.includes('http') ? profile.cvLink : `https://${profile.cvLink}`} target="_blank" rel="noreferrer" className="text-sm text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors break-all">{profile.cvLink || "No CV uploaded"}</a>}
             </Section>
           </div>
 
-          {/* Right col */}
-          <div className="md:col-span-2 space-y-6">
-
-            {/* Experience */}
+          {/* Right col: Experience */}
+          <div className="space-y-6">
             <Section label="Experience">
               <div className="space-y-3">
                 {cur.experience.map((exp, i) => (
@@ -266,7 +290,7 @@ export default function ProfilePage() {
                       )}
                     </div>
                     {editing && (
-                      <button onClick={() => removeExp(i)} aria-label={`Remove experience ${exp.role || "entry"}`} title={`Remove experience ${exp.role || "entry"}`} className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 mt-1">
+                      <button onClick={() => removeExp(i)} aria-label={`Remove experience ${exp.role || "entry"}`} className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 mt-1">
                         <X size={13} />
                       </button>
                     )}
@@ -282,13 +306,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </Section>
-
-            {/* CV Link */}
-            <Section label="CV / Resume">
-              {editing
-                ? <input value={draft.cvLink} onChange={e => set("cvLink", e.target.value)} className={`${inp} w-full`} placeholder="https://..." />
-                : <a href={profile.cvLink} target="_blank" rel="noreferrer" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors break-all">{profile.cvLink}</a>}
-            </Section>
           </div>
         </div>
       </div>
@@ -296,7 +313,6 @@ export default function ProfilePage() {
   );
 }
 
-// Fully consistent input style for both modes
 const inp = "border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f1117] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors";
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {

@@ -199,7 +199,7 @@ export function SignUpPage() {
       skills: formData.skills,
       experienceLevel: formData.experience,
     };
-
+    
     const response = await register(request);
 
     console.log("Registration success:", response);
@@ -219,6 +219,7 @@ export function SignUpPage() {
 
     alert(message);
   }
+  
 };
 
   if (isSubmitted) {
