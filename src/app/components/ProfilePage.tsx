@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
 import {
   MapPin, Calendar, Briefcase, Download,
   Pencil, X, Check, User
 } from "lucide-react";
+import { getCurrentProfile, updateCurrentProfile } from "../../api/authService";
 
 type Experience = { role: string; company: string; year: string };
 
@@ -24,6 +24,7 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [skillInput, setSkillInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -31,29 +32,33 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/users/1/profile");
+        const data = await getCurrentProfile();
         
-        // 3. Removed from mapping
         const fetchedData: Profile = {
-          name: response.data.name || "",
-          handle: response.data.username || "", 
-          role: response.data.roleName || "", 
-          location: response.data.location || "",
-          skills: response.data.skills || [], 
-          experience: response.data.workExperiences?.map((exp: any) => ({
+          name: data.name || "",
+          handle: data.username || "", 
+          role: data.roleName || "", 
+          location: data.location || "",
+          skills: data.skills || [], 
+          experience: data.workExperiences?.map((exp: any) => ({
             role: exp.position,
             company: exp.company,
             year: `${exp.startDate || ''} - ${exp.endDate || 'Present'}`
           })) || [],
-          cvLink: response.data.cvLink || "",
-          pp: response.data.profilePicLink || "",
+          cvLink: data.cvLink || "",
+          pp: data.profilePicLink || "",
         };
 
         setProfile(fetchedData);
         setDraft(fetchedData);
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching profile:", error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setFetchError('Please sign in to view your profile.');
+        } else {
+          setFetchError('Failed to load profile. Please try again.');
+        }
         setLoading(false);
       }
     };
@@ -73,7 +78,7 @@ export default function ProfilePage() {
         profilePicLink: draft.pp,
       };
 
-      await axios.put("http://localhost:8080/api/users/1/profile", payload);
+      await updateCurrentProfile(payload);
       
       setProfile(draft);
       setEditing(false);
@@ -120,6 +125,7 @@ export default function ProfilePage() {
   };
 
   if (loading) return <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white flex items-center justify-center">Loading profile...</div>;
+  if (fetchError) return <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white flex items-center justify-center">{fetchError}</div>;
   if (!profile || !draft) return <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white flex items-center justify-center">Profile not found.</div>;
 
   const cur = editing ? draft : profile;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Monitor, Lock, LogOut, ArrowLeft } from 'lucide-react';
+import { Sun, Moon, Monitor, Lock, LogOut, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import axios from 'axios';
+import { changePassword } from '../../api/authService';
 
 export function SettingsPage() {
   // --- Theme State ---
@@ -17,6 +17,7 @@ export function SettingsPage() {
     new: '',
     confirm: ''
   });
+  const [showPasswords, setShowPasswords] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState({ type: '', message: '' });
 
   // --- Theme Effect ---
@@ -37,7 +38,7 @@ export function SettingsPage() {
   // --- Handlers ---
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwords.new !== passwords.confirm) {
       setPasswordStatus({ type: 'error', message: "New passwords don't match." });
       return;
@@ -49,24 +50,19 @@ export function SettingsPage() {
 
     try {
       setPasswordStatus({ type: 'info', message: "Updating password..." });
-      
-      // REAL BACKEND CALL: Replace '1' with logged-in user ID
-      // await axios.put('http://localhost:8080/api/users/1/change-password', {
-      //   currentPassword: passwords.current,
-      //   newPassword: passwords.new
-      // });
 
-      // Simulated success for now
-      setTimeout(() => {
-        setPasswordStatus({ type: 'success', message: "Password updated successfully!" });
-        
-        setTimeout(() => {
-            closePasswordForm();
-        }, 1500);
-      }, 1000);
+      await changePassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.new
+      });
 
+      setPasswordStatus({ type: 'success', message: "Password updated successfully!" });
+      setTimeout(closePasswordForm, 1500);
     } catch (error: any) {
-      const errorMessage = error.response?.data || "Failed to update password. Check your current password.";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        "Failed to update password. Check your current password.";
       setPasswordStatus({ type: 'error', message: errorMessage });
     }
   };
@@ -171,42 +167,72 @@ export function SettingsPage() {
                   <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Current Password
                   </label>
-                  <input 
-                    id="current-password"
-                    type="password" 
-                    value={passwords.current}
-                    onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                    className={inputClass} 
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      id="current-password"
+                      type={showPasswords ? 'text' : 'password'} 
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                      className={inputClass} 
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                      aria-label={showPasswords ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 
                 <div>
                   <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     New Password
                   </label>
-                  <input 
-                    id="new-password" 
-                    type="password" 
-                    value={passwords.new}
-                    onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                    className={inputClass} 
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      id="new-password" 
+                      type={showPasswords ? 'text' : 'password'} 
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                      className={inputClass} 
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                      aria-label={showPasswords ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 
                 <div>
                   <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Confirm New Password
                   </label>
-                  <input 
-                    id="confirm-password" 
-                    type="password" 
-                    value={passwords.confirm}
-                    onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                    className={inputClass} 
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      id="confirm-password" 
+                      type={showPasswords ? 'text' : 'password'} 
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                      className={inputClass} 
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                      aria-label={showPasswords ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Status Message */}

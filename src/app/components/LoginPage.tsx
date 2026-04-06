@@ -6,12 +6,12 @@ import { login } from "../../api/authService";
 export function LoginPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    identifier: '',
+    email: '',
     password: '',
   });
 
   const [errors, setErrors] = useState({
-    identifier: '',
+    email: '',
     password: '',
   });
 
@@ -21,7 +21,7 @@ export function LoginPage() {
 
   const validateForm = () => {
     const newErrors = {
-      identifier: '',
+      email: '',
       password: '',
     };
 
@@ -29,11 +29,11 @@ export function LoginPage() {
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.identifier.trim()) {
-      newErrors.identifier = 'Email is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
       isValid = false;
-    } else if (!emailRegex.test(formData.identifier)) {
-      newErrors.identifier = 'Please enter a valid email';
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
       isValid = false;
     }
 
@@ -73,9 +73,11 @@ export function LoginPage() {
 
       console.log("Login success:", res);
 
-      // store token if backend returns JWT
-      if (res.token) {
-        localStorage.setItem("token", res.token);
+      const token = res.token || res.accessToken || res.jwt || res.authToken || res.data?.token;
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        console.warn("Login returned no token, profile requests may fail.", res);
       }
 
       setIsSubmitted(true);
@@ -87,10 +89,29 @@ export function LoginPage() {
     } catch (error: any) {
       console.error("Login failed:", error);
 
-      setErrors({
-        identifier: "",
-        password: "Invalid email or password",
-      });
+      if (error.response) {
+        if (error.response.status === 401) {
+          setErrors({
+            email: "",
+            password: "Invalid email or password",
+          });
+        } else if (error.response.status === 400) {
+          setErrors({
+            email: "",
+            password: "Bad request. Please check your input.",
+          });
+        } else {
+          setErrors({
+            email: "",
+            password: "Server error. Please try again later.",
+          });
+        }
+      } else {
+        setErrors({
+          email: "",
+          password: "Network error. Please check your connection.",
+        });
+      }
     }
   };
 
@@ -115,7 +136,7 @@ export function LoginPage() {
               </svg>
             </div>
             <h2 className="mb-2">Welcome Back!</h2>
-            <p className="text-muted-foreground">
+            <p className="text-foreground">
               You have successfully logged in.
             </p>
           </div>
@@ -136,24 +157,23 @@ export function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Field */}
             <div>
-              <label htmlFor="identifier" className="block mb-2 text-foreground">
+              <label htmlFor="email" className="block mb-2 text-foreground">
                 Email
               </label>
               <input
                 type="email"
-                id="identifier"
-                name="identifier"
-                value={formData.identifier}
+                id="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 className={`w-full px-4 py-2.5 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${
-                  errors.identifier ? 'border-destructive' : 'border-border'
+                  errors.email ? 'border-destructive' : 'border-border'
                 } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
                 placeholder="you@example.com"
               />
-              {errors.identifier && (
-                <p className="mt-1.5 text-destructive text-sm">{errors.identifier}</p>
+              {errors.email && (
+                <p className="mt-1.5 text-destructive text-sm">{errors.email}</p>
               )}
             </div>
 
