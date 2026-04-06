@@ -139,9 +139,15 @@ export default function ProfilePage() {
         <div className="flex items-end justify-between -mt-12 mb-4">
           <div className="relative">
             <div className="w-24 h-24 rounded-full border-4 border-white dark:border-[#0f1117] bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center shadow-md">
-              {cur.pp
-                ? <img src={cur.pp} alt="pp" className="w-full h-full object-cover" />
-                : <User size={36} className="text-gray-400 dark:text-gray-500" />}
+              {isValidImageSrc(cur.pp) ? (
+                <img src={cur.pp} alt="pp" className="w-full h-full object-cover" />
+              ) : cur.name ? (
+                <span className="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+                  {getInitials(cur.name)}
+                </span>
+              ) : (
+                <User size={36} className="text-gray-400 dark:text-gray-500" />
+              )}
             </div>
             {editing && (
               <>
@@ -221,7 +227,6 @@ export default function ProfilePage() {
               ? <input value={draft.location} onChange={e => set("location", e.target.value)} className={`${inp} w-40`} placeholder="Location" />
               : profile.location}
           </span>
-          <span className="flex items-center gap-1"><Calendar size={13} /> Joined 2024</span>
         </div>
 
         {/* Open to work banner */}
@@ -320,6 +325,22 @@ export default function ProfilePage() {
 }
 
 const inp = "border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f1117] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors";
+
+function isValidImageSrc(src: string) {
+  if (!src) return false;
+  const value = src.trim();
+  if (!value || value.toLowerCase() === 'pp' || value.toLowerCase() === 'null' || value.toLowerCase() === 'undefined') {
+    return false;
+  }
+  return /^(https?:\/\/|data:image\/|\/|\.?\.\/|[^\s]+\.(jpg|jpeg|png|gif|webp|svg))$/i.test(value);
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
