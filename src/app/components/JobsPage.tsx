@@ -1,42 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from './ui/dialog';
 
 const API_BASE = 'http://localhost:8080';
 
 interface Job {
-  id: string;
+  id: string | null;
   title: string;
-  company: string;
+  companyName: string;
   location: string;
-  type: string;
-  salary: string;
+  via: string;
+  shareLink: string;
+  thumbnail: string | null;
+  extensions: string[];
   description: string;
-  tags: string[];
-  postedDate: string;
-  recommended?: boolean;
-}
-
-interface JobDetails {
-  jobTitle: string;
-  contributingSkills: string[];
-  jobLinks: {
-    title: string;
-    companyName: string;
-    location: string;
-    via: string;
-    shareLink: string;
-    thumbnail: string;
-    extensions: string[];
-    description: string;
-    applyOptions: { title: string; link: string }[];
-  }[];
+  link: string | null;
+  applyOptions: { title: string; link: string }[];
 }
 
 function SkeletonCard() {
@@ -65,9 +43,9 @@ function SkeletonCard() {
   );
 }
 
-function JobCard({ job, onDetails }: { job: Job; onDetails: (jobId: string) => void }) {
+function JobCard({ job }: { job: Job }) {
   const jobParam = encodeURIComponent(
-    JSON.stringify({ id: job.id, title: job.title, company: job.company, tags: job.tags, description: job.description })
+    JSON.stringify({ title: job.title, company: job.companyName, tags: job.extensions, description: job.description })
   );
 
   return (
@@ -81,54 +59,44 @@ function JobCard({ job, onDetails }: { job: Job; onDetails: (jobId: string) => v
     ">
       {/* Top row */}
       <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
-            {job.title}
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{job.company}</p>
+        <div className="flex items-start gap-3">
+          {job.thumbnail && (
+            <img src={job.thumbnail} alt={job.companyName} className="w-12 h-12 object-cover rounded" />
+          )}
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
+              {job.title}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{job.companyName}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs">via {job.via}</p>
+          </div>
         </div>
-        <button
-          className="text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors mt-1"
-          aria-label="Save job"
-          title="Save job"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-        </button>
       </div>
 
       {/* Meta */}
       <div className="flex flex-wrap gap-3 mb-4 text-sm text-gray-500 dark:text-gray-400">
-        {[
-          { icon: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z", text: job.location },
-          { icon: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", text: job.type },
-          { icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", text: job.salary },
-          { icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", text: job.postedDate },
-        ].filter(item => item.text).map(({ icon, text }) => (
-          <span key={text} className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
-            </svg>
-            {text}
+        <span className="flex items-center gap-1">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {job.location}
+        </span>
+      </div>
+
+      {/* Extensions */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {job.extensions.map(ext => (
+          <span key={ext} className="px-3 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
+            {ext}
           </span>
         ))}
       </div>
 
       {/* Description */}
-      <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-2">{job.description}</p>
-
-      {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-4 mt-auto">
-        {job.tags?.map(tag => (
-          <span key={tag} className="px-3 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
-            {tag}
-          </span>
-        ))}
-      </div>
+      <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-3">{job.description}</p>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-auto">
         <Link
           to={`/interview?job=${jobParam}`}
           className="px-3 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center gap-1.5
@@ -140,12 +108,17 @@ function JobCard({ job, onDetails }: { job: Job; onDetails: (jobId: string) => v
           </svg>
           Interview
         </Link>
-        <button 
-          onClick={() => onDetails(job.id)}
-          className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-        >
-          Details
-        </button>
+        {job.applyOptions.map(option => (
+          <a
+            key={option.title}
+            href={option.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            {option.title}
+          </a>
+        ))}
       </div>
     </div>
   );
@@ -157,25 +130,6 @@ export function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [selectedJobDetails, setSelectedJobDetails] = useState<JobDetails | null>(null);
-  const [detailsLoading, setDetailsLoading] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
-  const fetchJobDetails = async (jobId: string) => {
-    try {
-      setDetailsLoading(true);
-      const res = await fetch(`${API_BASE}/api/jobs/${jobId}`);
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data: JobDetails = await res.json();
-      setSelectedJobDetails(data);
-      setIsDetailsOpen(true);
-    } catch (err) {
-      console.error('Failed to fetch job details:', err);
-      alert('Failed to load job details.');
-    } finally {
-      setDetailsLoading(false);
-    }
-  };
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -198,14 +152,15 @@ export function JobsPage() {
     fetchJobs();
   }, []);
 
-  const recommendedJobs = jobs.filter(job => job.recommended);
+  const recommendedJobs = jobs.filter(job => job.extensions.includes('Full-time')); // Example, adjust as needed
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesFilter = filterType === 'all' || job.type === filterType;
+      job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.extensions.some(ext => ext.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesFilter = filterType === 'all' || job.extensions.includes(filterType);
     return matchesSearch && matchesFilter;
   });
 
@@ -285,7 +240,7 @@ export function JobsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading
                 ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-                : recommendedJobs.map(job => <JobCard key={job.id} job={job} onDetails={fetchJobDetails} />)
+                : recommendedJobs.map(job => <JobCard key={job.shareLink} job={job} />)
               }
             </div>
           </section>
@@ -304,7 +259,7 @@ export function JobsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-              : filteredJobs.map(job => <JobCard key={job.id} job={job} onDetails={fetchJobDetails} />)
+              : filteredJobs.map(job => <JobCard key={job.shareLink} job={job} />)
             }
           </div>
           {!loading && filteredJobs.length === 0 && !error && (
@@ -317,76 +272,6 @@ export function JobsPage() {
           )}
         </section>
       </div>
-
-      {/* Job Details Modal */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Job Details</DialogTitle>
-          </DialogHeader>
-          {detailsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
-            </div>
-          ) : selectedJobDetails ? (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {selectedJobDetails.jobTitle}
-                </h2>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {selectedJobDetails.contributingSkills.map(skill => (
-                    <span key={skill} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {selectedJobDetails.jobLinks.map((jobLink, index) => (
-                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    {jobLink.thumbnail && (
-                      <img src={jobLink.thumbnail} alt={jobLink.title} className="w-16 h-16 object-cover rounded" />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{jobLink.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-400">{jobLink.companyName} • {jobLink.location}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-500">via {jobLink.via}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {jobLink.extensions.map(ext => (
-                      <span key={ext} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded text-sm">
-                        {ext}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mb-6">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{jobLink.description}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Apply Options</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {jobLink.applyOptions.map(option => (
-                        <a
-                          key={option.title}
-                          href={option.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                        >
-                          {option.title}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
