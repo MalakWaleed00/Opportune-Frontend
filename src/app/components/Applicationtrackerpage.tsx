@@ -22,14 +22,15 @@ const INITIAL_APPS: Application[] = [
 ];
 
 const STATUS_COLORS: Record<AppStatus, { dot: string; bg: string; text: string; border: string }> = {
-  'Applied': { dot: 'bg-slate-600', bg: 'bg-slate-600/10', text: 'text-slate-600', border: 'border-slate-600/20' },
-  'Interview Scheduled': { dot: 'bg-slate-700', bg: 'bg-slate-700/10', text: 'text-slate-700', border: 'border-slate-700/20' },
-  'Interview Done': { dot: 'bg-slate-800', bg: 'bg-slate-800/10', text: 'text-slate-800', border: 'border-slate-800/20' },
-  'Offer Received': { dot: 'bg-amber-600', bg: 'bg-amber-600/10', text: 'text-amber-600', border: 'border-amber-600/20' },
-  'Offer Accepted': { dot: 'bg-emerald-600', bg: 'bg-emerald-600/10', text: 'text-emerald-600', border: 'border-emerald-600/20' },
-  'Rejected': { dot: 'bg-rose-600', bg: 'bg-rose-600/10', text: 'text-rose-600', border: 'border-rose-600/20' },
-  'Withdrawn': { dot: 'bg-slate-500', bg: 'bg-slate-500/10', text: 'text-slate-500', border: 'border-slate-500/20' },
+  'Applied': { dot: 'bg-sky-500', bg: 'bg-sky-500/15', text: 'text-sky-500', border: 'border-sky-500/25' },
+  'Interview Scheduled': { dot: 'bg-violet-500', bg: 'bg-violet-500/15', text: 'text-violet-500', border: 'border-violet-500/25' },
+  'Interview Done': { dot: 'bg-indigo-500', bg: 'bg-indigo-500/15', text: 'text-indigo-500', border: 'border-indigo-500/25' },
+  'Offer Received': { dot: 'bg-amber-500', bg: 'bg-amber-500/15', text: 'text-amber-500', border: 'border-amber-500/25' },
+  'Offer Accepted': { dot: 'bg-emerald-500', bg: 'bg-emerald-500/15', text: 'text-emerald-500', border: 'border-emerald-500/25' },
+  'Rejected': { dot: 'bg-rose-500', bg: 'bg-rose-500/15', text: 'text-rose-500', border: 'border-rose-500/25' },
+  'Withdrawn': { dot: 'bg-slate-500', bg: 'bg-slate-500/15', text: 'text-slate-500', border: 'border-slate-500/25' },
 };
+
 
 export function ApplicationTrackerPage() {
   // Sync state with local storage so Analytics page can read it
@@ -106,43 +107,47 @@ export function ApplicationTrackerPage() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Applied</p>
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{apps.length}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">total</p>
           </div>
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Interviews</p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{interviewCount}</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">{interviewCount}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">scheduled or done</p>
           </div>
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Offers</p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{offerCount}</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">{offerCount}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">received or accepted</p>
           </div>
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Rejected</p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{rejectedCount}</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">{rejectedCount}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">not selected</p>
           </div>
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-6">
-          <button onClick={() => setFilter('All')} className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filter === 'All' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+          <button onClick={() => setFilter('All')} className={`px-3 py-1 text-sm font-medium transition-colors rounded-full ${filter === 'All' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-700/60'}`}>
             All
           </button>
           {Object.keys(STATUS_COLORS).map(status => (
-            <button key={status} onClick={() => setFilter(status as AppStatus)} className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${filter === status ? 'bg-slate-100 border-slate-300 text-slate-900 dark:bg-slate-800 dark:border-slate-600 dark:text-white' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
-              {status} <span className="ml-1 opacity-50">{apps.filter(a => a.status === status).length}</span>
+            <button
+              key={status}
+              onClick={() => setFilter(status as AppStatus)}
+              className={`px-3 py-1 text-sm font-medium transition-colors rounded-full ${filter === status ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-700/60'}`}
+            >
+              {status} <span className="ml-1 opacity-60">{apps.filter(a => a.status === status).length}</span>
             </button>
           ))}
         </div>
 
         {/* Table / List */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
-          <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-500 dark:text-slate-400">
+        <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl overflow-hidden shadow-sm">
+          <div className="grid grid-cols-12 gap-4 p-4 border-b border-gray-200 dark:border-gray-800 text-sm font-semibold text-slate-500 dark:text-slate-400">
             <div className="col-span-4">Job</div>
             <div className="col-span-2">Location</div>
             <div className="col-span-2">Applied</div>
@@ -169,7 +174,7 @@ export function ApplicationTrackerPage() {
                 
                 <div className="col-span-2">
                   <div className="relative group">
-                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold mb-1 ${STATUS_COLORS[app.status].bg} ${STATUS_COLORS[app.status].text} ${STATUS_COLORS[app.status].border}`}>
+                    <div className={`inline-flex items-center gap-1.5 text-xs font-semibold mb-1 ${STATUS_COLORS[app.status].text}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[app.status].dot}`} />
                       {app.status}
                     </div>
@@ -202,7 +207,7 @@ export function ApplicationTrackerPage() {
       {/* ADD APPLICATION MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-950 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+          <div className="bg-white dark:bg-[#1a1d27] w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700/60">
             <div className="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Add New Application</h2>
               <button onClick={() => setIsModalOpen(false)} aria-label="Close modal" className="text-gray-500 hover:text-gray-700 dark:hover:text-white transition-colors">
