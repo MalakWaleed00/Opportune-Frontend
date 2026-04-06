@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
+  PieChart, Pie, Cell,
 } from 'recharts';
 
 export type AppStatus = 'Applied' | 'Interview Scheduled' | 'Interview Done' | 'Offer Received' | 'Offer Accepted' | 'Rejected' | 'Withdrawn';
@@ -20,36 +19,36 @@ const INITIAL_APPS: Application[] = [
 ];
 
 const STATUS_FILL: Record<AppStatus, string> = {
-  'Applied': '#60a5fa',
-  'Interview Scheduled': '#a78bfa',
-  'Interview Done': '#818cf8',
-  'Offer Received': '#fbbf24',
-  'Offer Accepted': '#34d399',
-  'Rejected': '#f87171',
-  'Withdrawn': '#9ca3af',
+  'Applied': '#1d4ed8',
+  'Interview Scheduled': '#7c3aed',
+  'Interview Done': '#4338ca',
+  'Offer Received': '#b45309',
+  'Offer Accepted': '#0f766e',
+  'Rejected': '#b91c1c',
+  'Withdrawn': '#334155',
 };
 
 const STATUS_BADGE: Record<AppStatus, string> = {
-  'Applied': 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
-  'Interview Scheduled': 'bg-violet-100 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300',
-  'Interview Done': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300',
-  'Offer Received': 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300',
-  'Offer Accepted': 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300',
-  'Rejected': 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300',
-  'Withdrawn': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  'Applied': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
+  'Interview Scheduled': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
+  'Interview Done': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
+  'Offer Received': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
+  'Offer Accepted': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
+  'Rejected': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
+  'Withdrawn': 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-200',
 };
 
 const STATUS_DOT: Record<AppStatus, string> = {
-  'Applied': 'bg-blue-400',
-  'Interview Scheduled': 'bg-violet-400',
-  'Interview Done': 'bg-indigo-400',
-  'Offer Received': 'bg-amber-400',
-  'Offer Accepted': 'bg-green-400',
-  'Rejected': 'bg-red-400',
-  'Withdrawn': 'bg-gray-400',
+  'Applied': 'bg-blue-500',
+  'Interview Scheduled': 'bg-violet-500',
+  'Interview Done': 'bg-indigo-500',
+  'Offer Received': 'bg-amber-500',
+  'Offer Accepted': 'bg-emerald-500',
+  'Rejected': 'bg-rose-500',
+  'Withdrawn': 'bg-slate-500',
 };
 
-const FUNNEL_COLORS = ['bg-indigo-400', 'bg-violet-400', 'bg-green-400', 'bg-amber-400'];
+const FUNNEL_COLORS = ['bg-slate-600', 'bg-slate-500', 'bg-slate-400', 'bg-slate-300'];
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -106,19 +105,6 @@ export function AnalyticsDashboardpage() {
     apps.reduce((acc, a) => { acc[a.status] = (acc[a.status] ?? 0) + 1; return acc; }, {} as Record<string, number>)
   ).map(([name, value]) => ({ name, value }));
 
-  const monthlyMap = apps.reduce((acc, a) => {
-    // Standardize date format for charting
-    const dateObj = new Date(a.appliedDate);
-    const month = isNaN(dateObj.getTime()) ? 'Unknown' : dateObj.toLocaleDateString('en-US', { month: 'short' });
-    
-    if (!acc[month]) acc[month] = { month, Applied: 0, Interviews: 0, Offers: 0 };
-    acc[month].Applied++;
-    if (['Interview Scheduled', 'Interview Done'].includes(a.status)) acc[month].Interviews++;
-    if (['Offer Received', 'Offer Accepted'].includes(a.status)) acc[month].Offers++;
-    return acc;
-  }, {} as Record<string, { month: string; Applied: number; Interviews: number; Offers: number }>);
-  
-  const lineData = Object.values(monthlyMap);
   const barData = statusData.map(d => ({ ...d, fill: STATUS_FILL[d.name as AppStatus] ?? '#9ca3af' }));
 
   const funnelSteps = [
@@ -141,10 +127,10 @@ export function AnalyticsDashboardpage() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Total Applied"   value={total}               sub="all time"                   color="text-gray-900 dark:text-white" />
-          <StatCard label="Interview Rate"  value={`${interviewRate}%`} sub={`${interviews} interviews`} color="text-violet-600 dark:text-violet-400" />
-          <StatCard label="Offer Rate"      value={`${offerRate}%`}     sub={`${offers} offers`}         color="text-green-600 dark:text-green-400" />
-          <StatCard label="Overall Success" value={`${successRate}%`}   sub={`${rejected} rejections`}   color="text-blue-600 dark:text-blue-400" />
+          <StatCard label="Total Applied"   value={total}               sub="all time"                   color="text-slate-900 dark:text-white" />
+          <StatCard label="Interview Rate"  value={`${interviewRate}%`} sub={`${interviews} interviews`} color="text-slate-900 dark:text-white" />
+          <StatCard label="Offer Rate"      value={`${offerRate}%`}     sub={`${offers} offers`}         color="text-slate-900 dark:text-white" />
+          <StatCard label="Overall Success" value={`${successRate}%`}   sub={`${rejected} rejections`}   color="text-slate-900 dark:text-white" />
         </div>
 
         <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-5 shadow-sm mb-6">
@@ -164,36 +150,6 @@ export function AnalyticsDashboardpage() {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <ChartCard title="Monthly Activity">
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={lineData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Line type="monotone" dataKey="Applied"    stroke="#60a5fa" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="Interviews" stroke="#a78bfa" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="Offers"     stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title="Status Breakdown">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={barData} layout="vertical">
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={110} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                  {barData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -223,9 +179,6 @@ export function AnalyticsDashboardpage() {
             <div className="space-y-3">
               {apps.slice(0, 5).map(app => (
                 <div key={app.id} className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-base flex-shrink-0">
-                    {app.logo}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{app.jobTitle}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{app.company}</p>
