@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import { JobDetails, JobResponseDTO, recommendJobs, getAllJobs } from '../../api/jobService';
 
 const API_BASE = 'http://localhost:8080';
-
-interface Job {
-  id: string | null;
-  title: string;
-  companyName: string;
-  location: string;
-  via: string;
-  shareLink: string;
-  thumbnail: string | null;
-  extensions: string[];
-  description: string;
-  link: string | null;
-  applyOptions: { title: string; link: string }[];
-}
 
 function SkeletonCard() {
   return (
@@ -43,7 +30,7 @@ function SkeletonCard() {
   );
 }
 
-function JobCard({ job }: { job: Job }) {
+function JobCard({ job }: { job: JobDetails }) {
   const jobParam = encodeURIComponent(
     JSON.stringify({ title: job.title, company: job.companyName, tags: job.extensions, description: job.description })
   );
@@ -57,7 +44,6 @@ function JobCard({ job }: { job: Job }) {
       transition-all duration-200
       flex flex-col h-full
     ">
-      {/* Top row */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
           {job.thumbnail && (
@@ -73,7 +59,6 @@ function JobCard({ job }: { job: Job }) {
         </div>
       </div>
 
-      {/* Meta */}
       <div className="flex flex-wrap gap-3 mb-4 text-sm text-gray-500 dark:text-gray-400">
         <span className="flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +68,6 @@ function JobCard({ job }: { job: Job }) {
         </span>
       </div>
 
-      {/* Extensions */}
       <div className="flex flex-wrap gap-2 mb-4">
         {job.extensions.map(ext => (
           <span key={ext} className="px-3 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
@@ -92,10 +76,8 @@ function JobCard({ job }: { job: Job }) {
         ))}
       </div>
 
-      {/* Description */}
       <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-3">{job.description}</p>
 
-      {/* Actions */}
       <div className="flex gap-2 mt-auto">
         <Link
           to={`/interview?job=${jobParam}`}
@@ -103,9 +85,6 @@ function JobCard({ job }: { job: Job }) {
             border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-400
             hover:bg-violet-50 dark:hover:bg-violet-900/20"
         >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
           Interview
         </Link>
         {job.applyOptions.map(option => (
@@ -125,7 +104,8 @@ function JobCard({ job }: { job: Job }) {
 }
 
 export function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobDetails[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<JobDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,13 +116,35 @@ export function JobsPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE}/api/jobs`);
+
+        const res = await fetch(`${API_BASE}/api/jobs/recommend`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skills: [], experience: '', topK: 100 })
+        });
+
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        const data: Job[] = await res.json();
+        const data: JobDetails[] = await res.json();
         setJobs(data);
+
+        // ✅ FIXED PART
+        const staticRequest = {
+          skills: ["AWS", "Linux", "Networking", "Kubernetes", "IAM", "Azure", "Security Scanning"],
+          experience: "senior",
+          topK: 5
+        };
+
+        const recommendedData: JobResponseDTO[] = await recommendJobs(staticRequest);
+
+        const recommendedJobDetails: JobDetails[] =
+          recommendedData?.flatMap(response => response.jobLinks) ?? [];
+
+        setRecommendedJobs(recommendedJobDetails);
+
       } catch (err) {
         console.error('Failed to load jobs:', err);
         setJobs([]);
+        setRecommendedJobs([]);
         setError('No jobs found.');
       } finally {
         setLoading(false);
@@ -152,21 +154,21 @@ export function JobsPage() {
     fetchJobs();
   }, []);
 
-  const recommendedJobs = jobs.filter(job => job.extensions.includes('Full-time')); // Example, adjust as needed
-
   const filteredJobs = jobs.filter(job => {
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.extensions.some(ext => ext.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesFilter = filterType === 'all' || job.extensions.includes(filterType);
+
+    const matchesFilter =
+      filterType === 'all' || job.extensions.includes(filterType);
+
     return matchesSearch && matchesFilter;
   });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] transition-colors duration-300">
-      {/* Header */}
       <header className="bg-white dark:bg-[#0f1117] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Job Board</h1>
@@ -174,103 +176,43 @@ export function JobsPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Search + Filter */}
+
         <div className="flex flex-col md:flex-row gap-4 mb-10">
-          <div className="flex-1 relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search jobs, companies, or skills..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm outline-none transition-colors
-                bg-white dark:bg-[#1a1d27]
-                border border-gray-200 dark:border-gray-700
-                text-gray-900 dark:text-white
-                placeholder-gray-400 dark:placeholder-gray-500
-                focus:border-black dark:focus:border-gray-500"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Search jobs..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border rounded"
+          />
+
           <select
             value={filterType}
             onChange={e => setFilterType(e.target.value)}
-            aria-label="Filter jobs by type"
-            title="Filter jobs by type"
-            className="px-4 py-2.5 rounded-lg text-sm outline-none transition-colors
-              bg-white dark:bg-[#1a1d27]
-              border border-gray-200 dark:border-gray-700
-              text-gray-900 dark:text-white
-              focus:border-black dark:focus:border-gray-500"
+            className="px-4 py-2 border rounded"
           >
-            <option value="all">All Types</option>
+            <option value="all">All</option>
             <option value="Full-time">Full-time</option>
             <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
-            <option value="Internship">Internship</option>
           </select>
         </div>
 
-        {/* Error state */}
-        {error && (
-          <div className="mb-8 flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
-            <button
-              onClick={() => window.location.reload()}
-              className="ml-auto underline underline-offset-2 hover:no-underline"
-            >
-              Retry
-            </button>
-          </div>
-        )}
+        {error && <p className="text-red-500">{error}</p>}
 
-        {/* Recommended */}
-        {(loading || recommendedJobs.length > 0) && (
-          <section className="mb-12">
-            <div className="flex items-center gap-2 mb-6">
-              <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recommended for You</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loading
-                ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-                : recommendedJobs.map(job => <JobCard key={job.shareLink} job={job} />)
-              }
-            </div>
-          </section>
-        )}
+        <h2 className="text-lg font-bold mb-4">Recommended</h2>
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {recommendedJobs.map(job => (
+            <JobCard key={job.shareLink} job={job} />
+          ))}
+        </div>
 
-        {/* All Jobs */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">All Jobs</h2>
-            {!loading && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} found
-              </p>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading
-              ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-              : filteredJobs.map(job => <JobCard key={job.shareLink} job={job} />)
-            }
-          </div>
-          {!loading && filteredJobs.length === 0 && !error && (
-            <div className="text-center py-16 text-gray-400 dark:text-gray-600">
-              <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <p className="text-sm">No jobs found matching your search.</p>
-            </div>
-          )}
-        </section>
+        <h2 className="text-lg font-bold mb-4">All Jobs</h2>
+        <div className="grid grid-cols-3 gap-4">
+          {filteredJobs.map(job => (
+            <JobCard key={job.shareLink} job={job} />
+          ))}
+        </div>
+
       </div>
     </div>
   );
