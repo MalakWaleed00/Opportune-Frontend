@@ -71,7 +71,7 @@ function JobCard({ job }: { job: JobDetails }) {
       */}
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {job.extensions.map(ext => (
+        {job.extensions?.map(ext => (
           <span key={ext} className="px-3 py-1 text-xs rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
             {ext}
           </span>
@@ -93,7 +93,7 @@ function JobCard({ job }: { job: JobDetails }) {
         >
           Interview
         </Link>
-        {job.applyOptions.map(option => (
+        {job.applyOptions?.map(option => (
           <a
             key={option.title}
             href={option.link}
@@ -124,12 +124,27 @@ export function JobsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
 
+  // Helper function to remove duplicate jobs based on title and company
+  const getUniqueJobs = (jobsList: JobDetails[]) => {
+    if (!jobsList) return [];
+    const uniqueJobsMap = new Map();
+    jobsList.forEach(job => {
+      // Create a unique key combining title and company
+      const uniqueKey = `${job.title}-${job.companyName}`.toLowerCase();
+      if (!uniqueJobsMap.has(uniqueKey)) {
+        uniqueJobsMap.set(uniqueKey, job);
+      }
+    });
+    return Array.from(uniqueJobsMap.values());
+  };
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
         setError(null);
 
+        // Fetch ALL jobs
         const res = await fetch(`${API_BASE}/api/jobs/recommend`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -138,9 +153,11 @@ export function JobsPage() {
 
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const data: JobDetails[] = await res.json();
-        setJobs(data);
+        
+        // Remove duplicates before setting state
+        setJobs(getUniqueJobs(data));
 
-        // Static request
+        // Fetch RECOMMENDED jobs (Static request)
         const staticRequest = {
           skills: ["AWS", "Linux", "Networking", "Kubernetes", "IAM", "Azure", "Security Scanning"],
           experience: "senior",
@@ -152,7 +169,8 @@ export function JobsPage() {
         const recommendedJobDetails: JobDetails[] =
           recommendedData?.flatMap(response => response.jobLinks) ?? [];
 
-        setRecommendedJobs(recommendedJobDetails);
+        // Remove duplicates before setting state
+        setRecommendedJobs(getUniqueJobs(recommendedJobDetails));
 
       } catch (err) {
         console.error('Failed to load jobs:', err);
@@ -167,15 +185,29 @@ export function JobsPage() {
     fetchJobs();
   }, []);
 
+  // Create a Set of recommended job keys so we don't show them again in "All Jobs"
+  const recommendedJobKeys = new Set(
+    recommendedJobs.map(job => `${job.title}-${job.companyName}`.toLowerCase())
+  );
+
   const filteredJobs = jobs.filter(job => {
+    const uniqueKey = `${job.title}-${job.companyName}`.toLowerCase();
+    
+    // 1. Prevent Cross-Duplication: If it's in Recommended, don't show in All Jobs
+    if (recommendedJobKeys.has(uniqueKey)) {
+      return false;
+    }
+
+    // 2. Text Search Filter
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.extensions.some(ext => ext.toLowerCase().includes(searchQuery.toLowerCase()));
+      (job.extensions && job.extensions.some(ext => ext.toLowerCase().includes(searchQuery.toLowerCase())));
 
+    // 3. Dropdown Filter
     const matchesFilter =
-      filterType === 'all' || job.extensions.includes(filterType);
+      filterType === 'all' || (job.extensions && job.extensions.includes(filterType));
 
     return matchesSearch && matchesFilter;
   });
@@ -215,18 +247,26 @@ export function JobsPage() {
 
         {error && <p className="text-red-500">{error}</p>}
 
-        <h2 className="text-lg font-bold mb-4">Recommended</h2>
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {recommendedJobs.map(job => (
-            <JobCard key={job.shareLink} job={job} />
-          ))}
-        </div>
+        {recommendedJobs.length > 0 && (
+          <>
+            <h2 className="text-lg font-bold mb-4">Recommended</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {recommendedJobs.map(job => (
+                <JobCard key={job.shareLink || `${job.title}-${job.companyName}`} job={job} />
+              ))}
+            </div>
+          </>
+        )}
 
         <h2 className="text-lg font-bold mb-4">All Jobs</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {filteredJobs.map(job => (
-            <JobCard key={job.shareLink} job={job} />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredJobs.length > 0 ? (
+            filteredJobs.map(job => (
+              <JobCard key={job.shareLink || `${job.title}-${job.companyName}`} job={job} />
+            ))
+          ) : (
+            <p className="text-gray-500">No jobs found matching your criteria.</p>
+          )}
         </div>
 
       </div>
