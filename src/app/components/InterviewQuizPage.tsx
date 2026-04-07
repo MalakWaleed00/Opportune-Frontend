@@ -27,24 +27,215 @@ type Question = MCQQuestion | TFQuestion | EssayQuestion;
 const generateQuestions = (): Question[] => {
   const essayQs: EssayQuestion[] = [];
 
-  const mcqQs: MCQQuestion[] = [
-    {
-      type: 'mcq',
-      question: 'What does JSX stand for?',
-      options: ['JavaScript XML', 'Java Syntax Extension', 'JSON XML', 'None'],
-      answer: 0,
-    },
-    {
-      type: 'mcq',
-      question: 'Which hook is used for state in React?',
-      options: ['useEffect', 'useState', 'useReducer', 'useContext'],
-      answer: 1,
-    },
-  ];
+ const mcqQs: MCQQuestion[] = [
+  {
+    type: 'mcq',
+    question: 'What is the primary purpose of a CI/CD pipeline in DevOps?',
+    options: [
+      'To manually deploy applications',
+      'To automate building, testing, and deployment of applications',
+      'To replace source control systems',
+      'To monitor employee productivity',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'Which of the following tools is commonly used for CI/CD automation?',
+    options: ['Docker', 'Jenkins', 'Postman', 'Grafana'],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'In GitHub Actions, what is a workflow?',
+    options: [
+      'A Docker image',
+      'A branch protection rule',
+      'An automated process defined in YAML',
+      'A Git merge strategy',
+    ],
+    answer: 2,
+  },
+  {
+    type: 'mcq',
+    question: 'What is the best reason to use branching strategies in Git?',
+    options: [
+      'To increase server RAM',
+      'To organize and isolate code changes safely',
+      'To avoid using pull requests',
+      'To replace CI pipelines',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What is the main purpose of Docker in a DevOps environment?',
+    options: [
+      'To create databases',
+      'To manage Git branches',
+      'To package applications and dependencies into containers',
+      'To scan source code for vulnerabilities',
+    ],
+    answer: 2,
+  },
+  {
+    type: 'mcq',
+    question: 'Which Kubernetes object is commonly used to manage a set of running application pods?',
+    options: ['Deployment', 'Volume', 'Namespace', 'Ingress'],
+    answer: 0,
+  },
+  {
+    type: 'mcq',
+    question: 'What is GitHub Advanced Security primarily used for?',
+    options: [
+      'Managing cloud billing',
+      'Code scanning, secret detection, and dependency security',
+      'Container orchestration',
+      'Server patching only',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What does SAST stand for?',
+    options: [
+      'Secure Application Setup Testing',
+      'Static Application Security Testing',
+      'System Access Security Tracking',
+      'Software Automation Security Tool',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What does DAST stand for?',
+    options: [
+      'Dynamic Application Security Testing',
+      'Distributed API Security Tracking',
+      'Deployment Analysis Security Tool',
+      'Database Access Security Testing',
+    ],
+    answer: 0,
+  },
+  {
+    type: 'mcq',
+    question: 'What is the key difference between SAST and DAST?',
+    options: [
+      'SAST scans running apps, DAST scans source code',
+      'SAST scans source code, DAST tests running applications',
+      'SAST is for Docker only, DAST is for Kubernetes only',
+      'There is no difference',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'Why is secret detection important in a CI/CD pipeline?',
+    options: [
+      'To improve UI design',
+      'To prevent credentials and tokens from being exposed in code',
+      'To reduce CPU usage',
+      'To replace API gateways',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What is the purpose of a container registry?',
+    options: [
+      'To store and distribute container images',
+      'To host Git repositories',
+      'To log API requests',
+      'To manage user passwords',
+    ],
+    answer: 0,
+  },
+  {
+    type: 'mcq',
+    question: 'Which Azure service is commonly used to publish and host web applications?',
+    options: ['Azure Blob Storage', 'Azure App Service', 'Azure SQL', 'Azure Monitor'],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What is Azure API Management (APIM) mainly used for?',
+    options: [
+      'Managing source code branches',
+      'Hosting virtual machines',
+      'Securing, publishing, and managing APIs',
+      'Running SQL queries',
+    ],
+    answer: 2,
+  },
+  {
+    type: 'mcq',
+    question: 'Which of the following is an example of API authentication?',
+    options: [
+      'Using a firewall rule',
+      'Using OAuth 2.0 or JWT tokens',
+      'Using a Dockerfile',
+      'Using Git hooks',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What is the purpose of environment variables in application deployment?',
+    options: [
+      'To store code comments',
+      'To configure application settings without hardcoding them',
+      'To replace source control',
+      'To increase network speed',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'Why should connection strings not be hardcoded in source code?',
+    options: [
+      'Because it makes the UI slower',
+      'Because it can expose sensitive credentials and reduce flexibility',
+      'Because it prevents Git commits',
+      'Because it breaks YAML files',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'What is Infrastructure as Code (IaC)?',
+    options: [
+      'Writing business logic in JavaScript',
+      'Managing infrastructure using code and configuration files',
+      'Deploying applications without version control',
+      'A method for writing frontend CSS',
+    ],
+    answer: 1,
+  },
+  {
+    type: 'mcq',
+    question: 'Which of the following is an Infrastructure as Code tool?',
+    options: ['Terraform', 'Postman', 'Jira', 'Figma'],
+    answer: 0,
+  },
+  {
+    type: 'mcq',
+    question: 'What is a major benefit of Infrastructure as Code?',
+    options: [
+      'It eliminates the need for cloud platforms',
+      'It makes infrastructure reproducible and version-controlled',
+      'It removes the need for testing',
+      'It replaces containerization',
+    ],
+    answer: 1,
+  },
+
+
+
+  
+];
 
   const tfQs: TFQuestion[] = [
-    { type: 'tf', question: 'React uses a virtual DOM.', answer: true },
-    { type: 'tf', question: 'Props in React are mutable.', answer: false },
+   
   ];
 
   // Randomly shuffle and pick questions
