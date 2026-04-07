@@ -135,7 +135,7 @@ export function LoginPage() {
                 />
               </svg>
             </div>
-            <h2 className="mb-2">Welcome Back!</h2>
+           <h1 className="mb-2 text-black">Welcome back</h1>
             <p className="text-foreground">
               You have successfully logged in.
             </p>
@@ -150,7 +150,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-card rounded-lg p-8 border border-border shadow-sm">
           <div className="mb-8 text-center">
-            <h1 className="mb-2">Welcome back</h1>
+            <h1 className="mb-2 !text-black">Welcome back</h1>
             <p className="text-muted-foreground">
               Enter your credentials to access your account
             </p>
