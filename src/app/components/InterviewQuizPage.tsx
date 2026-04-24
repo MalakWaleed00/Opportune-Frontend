@@ -456,7 +456,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate , Link ,Outlet } from "react-router-dom";
 import {
   generateInterviewQuestions,
   evaluateInterviewAnswers,
@@ -499,6 +499,7 @@ export default function InterviewQuizPage() {
   // Speech-to-text state
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+const hasFetched = useRef(false);
 
   // Fetch questions on mount
   useEffect(() => {
@@ -545,9 +546,10 @@ export default function InterviewQuizPage() {
         setIsLoading(false);
       }
     };
-
+  if (hasFetched.current) return;
+  hasFetched.current = true;
     fetchQuestions();
-  }, [jobDescription]);
+  }, []);
 
   // Speech-to-text setup
   const speechSupported = typeof window !== "undefined" &&
@@ -768,13 +770,9 @@ export default function InterviewQuizPage() {
               </div>
             ))}
           </div>
-
-          <button
-            onClick={() => navigate("/jobs")}
-            className="mt-8 w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold transition-colors"
-          >
-            Back to Jobs
-          </button>
+         <Link to="/jobs" className="mt-4 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm inline-block">
+                   Go Back to Jobs
+          </Link>
         </div>
       </div>
     );

@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router";
 import { LoginPage } from "./components/LoginPage";
 import { SignUpPage } from "./components/SignUpPage";
 import { ForgotPasswordPage } from "./components/ForgotPasswordPage";
-import { JobsPage } from "./components/JobsPage";
+import { JobsPage}  from "./components/JobsPage";
 import CourseRecommendationPage from "./components/CourseRecommendationPage";
 import InterviewSelectPage from "./components/InterviewSelectPage";
 import InterviewQuizPage from "./components/InterviewQuizPage";
@@ -13,7 +13,7 @@ import { ApplicationTrackerPage } from "./components/Applicationtrackerpage";
 // It must be imported exactly like this in routes.ts:
 import { AnalyticsDashboardpage } from "./components/Analyticsdashboardpage";
 import { SettingsPage } from "./components/SettingsPage";
-
+import InterviewMcqPage from "./components/InterviewMcqPage";
 
 
 export const router = createBrowserRouter([
@@ -36,6 +36,7 @@ export const router = createBrowserRouter([
       { path: "/courses",         Component: CourseRecommendationPage },
       { path: "/interview",       Component: InterviewSelectPage },
       { path: "/interview/quiz",  Component: InterviewQuizPage },
+      { path: "/interview/mcq", Component: InterviewMcqPage },
       { path: "/profile",         Component: ProfilePage },
       { path: "/messages",        Component: MessagesPage },
       { path: "/tracker",         Component: ApplicationTrackerPage },
