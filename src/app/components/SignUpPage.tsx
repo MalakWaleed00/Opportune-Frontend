@@ -426,8 +426,8 @@ export function SignUpPage() {
 
                 <label
                   className={`flex items-center justify-between w-full px-4 py-2.5 rounded-lg border cursor-pointer
-    ${errors.cvLink ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
-    bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition`}
+                  ${errors.cvLink ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
+                  bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition`}
                 >
                   <span className="text-gray-600 dark:text-gray-400">
                     {formData.cvLink ? formData.cvLink : "Choose your CV file"}
