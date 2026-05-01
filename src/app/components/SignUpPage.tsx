@@ -11,7 +11,6 @@ export function SignUpPage() {
     email: "",
     password: "",
     userType: "jobseeker" as "jobseeker" | "recruiter",
-    cvLink: "",
     country: "",
     profilePicture: "",
     skills: [] as string[],
@@ -23,15 +22,12 @@ export function SignUpPage() {
     name: "",
     email: "",
     password: "",
-    cvLink: "",
     country: "",
     skills: "",
     experience: "",
   });
-
   const [skillInput, setSkillInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isUploadingCV, setIsUploadingCV] = useState(false);
   const countries = [
     "Egypt",
     "United States",
@@ -64,7 +60,6 @@ export function SignUpPage() {
       name: "",
       email: "",
       password: "",
-      cvLink: "",
       country: "",
       skills: "",
       experience: "",
@@ -96,11 +91,6 @@ export function SignUpPage() {
       isValid = false;
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
-      isValid = false;
-    }
-
-    if (formData.userType === "jobseeker" && !formData.cvLink.trim()) {
-      newErrors.cvLink = "CV link is required for jobseekers";
       isValid = false;
     }
 
@@ -171,57 +161,7 @@ export function SignUpPage() {
       handleAddSkill();
     }
   };
-  const handleCvUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    try {
-      setIsUploadingCV(true);
-
-      const formDataToSend = new FormData();
-      formDataToSend.append("file", file);
-
-      const response = await fetch(
-        "http://localhost:8080/parse/upload",
-        {
-          method: "POST",
-          body: formDataToSend,
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to upload CV");
-      }
-
-      const data = await response.json();
-
-      console.log("Parsed CV Response:", data);
-
-      setFormData((prev) => ({
-        ...prev,
-        cvLink: file.name,
-
-        // optional auto-fill from parsed response
-        skills: data.skills || prev.skills,
-        experience: data.experienceLevel || prev.experience,
-        name: data.name || prev.name,
-        email: data.email || prev.email,
-      }));
-
-      setErrors((prev) => ({
-        ...prev,
-        cvLink: "",
-      }));
-    } catch (error) {
-      console.error(error);
-      alert("CV upload failed");
-    } finally {
-      setIsUploadingCV(false);
-    }
-  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -234,24 +174,23 @@ export function SignUpPage() {
         email: formData.email,
         password: formData.password,
         role: formData.userType === "jobseeker" ? "JOBSEEKER" : "RECRUITER",
-        cvLink: formData.cvLink,
-        profilePicLink: formData.profilePicture,
         country: formData.country,
+        profilePicLink: formData.profilePicture,
         skills: formData.skills,
         experienceLevel: formData.experience,
       };
 
-      const response = await register(request);
-      console.log("Registration success:", response);
+      await register(request);
+
       setIsSubmitted(true);
 
       setTimeout(() => {
         navigate("/");
       }, 1500);
+
     } catch (error: any) {
-      console.error("Registration failed:", error);
-      const message = error?.response?.data?.message || "Registration failed";
-      alert(message);
+      console.error(error);
+      alert(error?.response?.data?.message || "Signup failed");
     }
   };
 
@@ -460,45 +399,6 @@ export function SignUpPage() {
                 </button>
               </div>
             </div>
-
-            {/* CV Link (only for jobseekers) */}
-            {formData.userType === "jobseeker" && (
-              <div>
-                <label className="block mb-2 text-black dark:text-gray-200 font-medium">
-                  Upload CV
-                </label>
-
-                <label
-                  className={`flex items-center justify-between w-full px-4 py-2.5 rounded-lg border cursor-pointer
-                  ${errors.cvLink ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
-                  bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition`}
-                >
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {isUploadingCV
-                      ? "Uploading CV..."
-                      : formData.cvLink
-                        ? formData.cvLink
-                        : "Choose your CV file"}
-                  </span>
-
-                  <span className="bg-black text-white dark:bg-white dark:text-black px-3 py-1 rounded-md text-sm">
-                    Browse
-                  </span>
-
-                  <input
-                    type="file"
-                    name="cvFile"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleCvUpload}
-                    className="hidden"
-                  />
-                </label>
-
-                {errors.cvLink && (
-                  <p className="mt-1.5 text-red-500 text-sm">{errors.cvLink}</p>
-                )}
-              </div>
-            )}
 
             {/* Country Field */}
             <div>

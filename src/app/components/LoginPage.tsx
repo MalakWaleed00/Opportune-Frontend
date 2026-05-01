@@ -18,7 +18,8 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [uploadingCv, setUploadingCv] = useState(false);
   const validateForm = () => {
     const newErrors = {
       email: '',
@@ -46,7 +47,30 @@ export function LoginPage() {
     setErrors(newErrors);
     return isValid;
   };
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    setCvFile(file);
+  };
+
+  const uploadCvAfterLogin = async (file: File, token: string, userId: number) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const user2 = JSON.parse(localStorage.getItem("user") || "{}");
+     const response = await fetch(
+    `http://localhost:8080/api/cv/parse?userId=${user2.id}`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+
+    if (!response.ok) throw new Error("CV upload failed");
+
+    return await response.text();
+  };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -65,20 +89,52 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     try {
       const res = await login(formData);
+      const data = res?.data ?? res;
 
-      console.log("Login success:", res);
+      const token =
+        data.token || data.accessToken || data.jwt || data.authToken;
 
-      const token = res.token || res.accessToken || res.jwt || res.authToken || res.data?.token;
-      if (token) {
-        localStorage.setItem("token", token);
-      } else {
-        console.warn("Login returned no token, profile requests may fail.", res);
+      if (!token) throw new Error("Invalid login response");
+
+      localStorage.setItem("token", token);
+
+      const user = {
+        id: data.id,
+        username: data.username ?? "",
+        email: data.email ?? "",
+        name: data.name ?? "",
+        role: data.role ?? "",
+        location: data.location ?? "",
+        cvLink: data.cvLink ?? "",
+        profilePicLink: data.profilePicLink ?? "",
+        skills: data.skills ?? [],
+      };
+
+      if (cvFile) {
+        try {
+          setUploadingCv(true);
+
+          const message = await uploadCvAfterLogin(
+            cvFile,
+            token,
+            data.id
+          );
+
+          console.log(message);
+
+        } catch (err) {
+          console.error("CV upload failed:", err);
+        } finally {
+          setUploadingCv(false);
+        }
       }
+
+
+      localStorage.setItem("user", JSON.stringify(user));
 
       setIsSubmitted(true);
 
@@ -89,31 +145,16 @@ export function LoginPage() {
     } catch (error: any) {
       console.error("Login failed:", error);
 
-      if (error.response) {
-        if (error.response.status === 401) {
-          setErrors({
-            email: "",
-            password: "Invalid email or password",
-          });
-        } else if (error.response.status === 400) {
-          setErrors({
-            email: "",
-            password: "Bad request. Please check your input.",
-          });
-        } else {
-          setErrors({
-            email: "",
-            password: "Server error. Please try again later.",
-          });
-        }
-      } else {
-        setErrors({
-          email: "",
-          password: "Network error. Please check your connection.",
-        });
-      }
+      setErrors({
+        email: "",
+        password:
+          error?.response?.status === 401
+            ? "Invalid email or password"
+            : "Login failed",
+      });
     }
   };
+
 
   if (isSubmitted) {
     return (
@@ -135,7 +176,7 @@ export function LoginPage() {
                 />
               </svg>
             </div>
-           <h1 className="mb-2 text-black">Welcome back</h1>
+            <h1 className="mb-2 text-black">Welcome back</h1>
             <p className="text-foreground">
               You have successfully logged in.
             </p>
@@ -167,9 +208,8 @@ export function LoginPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${
-                  errors.email ? 'border-destructive' : 'border-border'
-                } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${errors.email ? 'border-destructive' : 'border-border'
+                  } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
                 placeholder="you@example.com"
               />
               {errors.email && (
@@ -197,9 +237,8 @@ export function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2.5 pr-11 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${
-                    errors.password ? 'border-destructive' : 'border-border'
-                  } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
+                  className={`w-full px-4 py-2.5 pr-11 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${errors.password ? 'border-destructive' : 'border-border'
+                    } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
                   placeholder="••••••••"
                 />
                 <button
@@ -226,7 +265,35 @@ export function LoginPage() {
                 <p className="mt-1.5 text-destructive text-sm">{errors.password}</p>
               )}
             </div>
+            <div>
+              <label className="block mb-2 text-foreground">
+                Upload CV (Optional)
+              </label>
 
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleCvUpload}
+                className="w-full px-4 py-2.5 bg-input-background border border-border rounded-lg text-foreground
+    file:mr-4 file:py-2 file:px-4
+    file:rounded-md file:border-0
+    file:bg-primary file:text-primary-foreground
+    hover:file:opacity-90
+    focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+
+              {cvFile && (
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Selected: {cvFile.name}
+                </p>
+              )}
+
+              {uploadingCv && (
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Uploading CV...
+                </p>
+              )}
+            </div>
             {/* Remember Me */}
             <div className="flex items-center">
               <input

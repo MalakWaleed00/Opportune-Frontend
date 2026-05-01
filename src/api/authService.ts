@@ -10,7 +10,6 @@ export interface RegisterRequest {
   name: string;
   role: string;
   profilePicLink: string;
-  cvLink: string;
   country: string;
   skills: string[];
   experienceLevel: string;
