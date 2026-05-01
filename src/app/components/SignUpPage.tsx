@@ -31,7 +31,7 @@ export function SignUpPage() {
 
   const [skillInput, setSkillInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-
+  const [isUploadingCV, setIsUploadingCV] = useState(false);
   const countries = [
     "Egypt",
     "United States",
@@ -171,7 +171,57 @@ export function SignUpPage() {
       handleAddSkill();
     }
   };
+  const handleCvUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
 
+    if (!file) return;
+
+    try {
+      setIsUploadingCV(true);
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("file", file);
+
+      const response = await fetch(
+        "http://localhost:8080/parse/upload",
+        {
+          method: "POST",
+          body: formDataToSend,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to upload CV");
+      }
+
+      const data = await response.json();
+
+      console.log("Parsed CV Response:", data);
+
+      setFormData((prev) => ({
+        ...prev,
+        cvLink: file.name,
+
+        // optional auto-fill from parsed response
+        skills: data.skills || prev.skills,
+        experience: data.experienceLevel || prev.experience,
+        name: data.name || prev.name,
+        email: data.email || prev.email,
+      }));
+
+      setErrors((prev) => ({
+        ...prev,
+        cvLink: "",
+      }));
+    } catch (error) {
+      console.error(error);
+      alert("CV upload failed");
+    } finally {
+      setIsUploadingCV(false);
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -266,11 +316,10 @@ export function SignUpPage() {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                  errors.username
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.username
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
                 placeholder="john_doe"
               />
               {errors.username && (
@@ -292,11 +341,10 @@ export function SignUpPage() {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                  errors.name
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.name
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
                 placeholder="John Doe"
               />
               {errors.name && (
@@ -318,11 +366,10 @@ export function SignUpPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                  errors.email
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.email
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
                 placeholder="you@example.com"
               />
               {errors.email && (
@@ -344,11 +391,10 @@ export function SignUpPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                  errors.password
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.password
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
                 placeholder="••••••••"
               />
               {errors.password && (
@@ -365,11 +411,10 @@ export function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => handleUserTypeChange("jobseeker")}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                    formData.userType === "jobseeker"
-                      ? "border-black bg-gray-100 text-black dark:border-gray-300 dark:bg-gray-800 dark:text-white"
-                      : "border-gray-200 bg-gray-50 text-gray-600 hover:border-black hover:text-black dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-white"
-                  }`}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all ${formData.userType === "jobseeker"
+                    ? "border-black bg-gray-100 text-black dark:border-gray-300 dark:bg-gray-800 dark:text-white"
+                    : "border-gray-200 bg-gray-50 text-gray-600 hover:border-black hover:text-black dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-white"
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
@@ -391,11 +436,10 @@ export function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => handleUserTypeChange("recruiter")}
-                  className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                    formData.userType === "recruiter"
-                      ? "border-black bg-gray-100 text-black dark:border-gray-300 dark:bg-gray-800 dark:text-white"
-                      : "border-gray-200 bg-gray-50 text-gray-600 hover:border-black hover:text-black dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-white"
-                  }`}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all ${formData.userType === "recruiter"
+                    ? "border-black bg-gray-100 text-black dark:border-gray-300 dark:bg-gray-800 dark:text-white"
+                    : "border-gray-200 bg-gray-50 text-gray-600 hover:border-black hover:text-black dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-300 dark:hover:text-white"
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
@@ -430,7 +474,11 @@ export function SignUpPage() {
                   bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition`}
                 >
                   <span className="text-gray-600 dark:text-gray-400">
-                    {formData.cvLink ? formData.cvLink : "Choose your CV file"}
+                    {isUploadingCV
+                      ? "Uploading CV..."
+                      : formData.cvLink
+                        ? formData.cvLink
+                        : "Choose your CV file"}
                   </span>
 
                   <span className="bg-black text-white dark:bg-white dark:text-black px-3 py-1 rounded-md text-sm">
@@ -441,7 +489,7 @@ export function SignUpPage() {
                     type="file"
                     name="cvFile"
                     accept=".pdf,.doc,.docx"
-                    onChange={handleChange}
+                    onChange={handleCvUpload}
                     className="hidden"
                   />
                 </label>
@@ -465,11 +513,10 @@ export function SignUpPage() {
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                  errors.country
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.country
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
               >
                 <option value="">Select a country</option>
                 {countries.map((country) => (
@@ -517,11 +564,10 @@ export function SignUpPage() {
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={handleSkillKeyDown}
-                  className={`flex-1 px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                    errors.skills
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-600"
-                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                  className={`flex-1 px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.skills
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                    } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
                   placeholder="e.g., JavaScript, React, Node.js"
                 />
                 <button
@@ -583,11 +629,10 @@ export function SignUpPage() {
                 name="experience"
                 value={formData.experience}
                 onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
-                  errors.experience
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.experience
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
               >
                 <option value="">Select experience level</option>
                 {experienceLevels.map((level) => (
