@@ -156,9 +156,15 @@ const goToMcq = () => {
 
         {/* Back button */}
         <div className="mt-8 text-center">
-          <Link to="/jobs" className="text-gray-500 dark:text-gray-400 text-sm hover:text-gray-700 dark:hover:text-gray-300">
-            ← Back to Jobs
-          </Link>
+         <button
+           onClick={() => {
+             // Break out of React Router context completely and force the browser to change paths
+             window.location.href = "/jobs";
+           }}
+           className="mt-8 w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold transition-colors"
+         >
+           Back to Jobs
+         </button>
         </div>
       </div>
     </div>

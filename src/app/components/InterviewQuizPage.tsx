@@ -555,7 +555,11 @@ const hasFetched = useRef(false);
   const speechSupported = typeof window !== "undefined" &&
     (!!window.SpeechRecognition || !!window.webkitSpeechRecognition);
 
-  const startListening = () => {
+// 1. First, add a new ref right next to your other refs at the top of your component:
+  const baseTextRef = useRef("");
+
+  // 2. Update your startListening function to this:
+const startListening = () => {
     const SpeechRecognitionAPI = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) return;
 
@@ -564,15 +568,35 @@ const hasFetched = useRef(false);
     recognition.interimResults = true;
     recognition.continuous = true;
 
+    // Capture whatever text the user already typed MANUALLY into the box before hitting record
+    const textBeforeRecording = currentText.trim();
+
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+      let finalizedSessionText = "";
+      let interimSessionText = "";
+
+      // Always read from 0 to capture the engine's absolute truth state
+      for (let i = 0; i < event.results.length; i++) {
+        const chunk = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalizedSessionText += chunk;
+        } else {
+          interimSessionText += chunk;
+        }
       }
-      setCurrentText((prev) => {
-        const base = prev.replace(/\s*\[speaking...\]\s*$/, "").trimEnd();
-        return base + (base ? " " : "") + transcript;
-      });
+
+      // Reconstruct the text box cleanly from scratch
+      let resultText = textBeforeRecording;
+
+      if (finalizedSessionText) {
+        resultText += (resultText ? " " : "") + finalizedSessionText.trim();
+      }
+
+      if (interimSessionText) {
+        resultText += (resultText ? " " : "") + interimSessionText.trim();
+      }
+
+      setCurrentText(resultText);
     };
 
     recognition.onerror = () => stopListening();
@@ -770,9 +794,16 @@ const hasFetched = useRef(false);
               </div>
             ))}
           </div>
-         <Link to="/jobs" className="mt-4 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm inline-block">
-                   Go Back to Jobs
-          </Link>
+
+<button
+  onClick={() => {
+    // Break out of React Router context completely and force the browser to change paths
+    window.location.href = "/jobs";
+  }}
+  className="mt-8 w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold transition-colors"
+>
+  Back to Jobs
+</button>
         </div>
       </div>
     );
