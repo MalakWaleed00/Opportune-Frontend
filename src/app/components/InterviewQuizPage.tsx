@@ -720,12 +720,15 @@ const startListening = () => {
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 max-w-md text-center">
           <p className="text-red-700 dark:text-red-400 font-semibold mb-2">Something went wrong</p>
           <p className="text-red-600 dark:text-red-300 text-sm">{errorMsg}</p>
-          <button
-            onClick={() => navigate("/jobs")}
-            className="mt-4 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm"
-          >
-            Go Back to Jobs
-          </button>
+         <button
+           onClick={() => {
+             // Break out of React Router context completely and force the browser to change paths
+             window.location.href = "/jobs";
+           }}
+           className="mt-8 w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold transition-colors"
+         >
+           Back to Jobs
+         </button>
         </div>
       </div>
     );
