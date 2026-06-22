@@ -6,7 +6,6 @@ const links = [
   
   { to: "/jobs",      icon: <Briefcase size={18} />,       label: "Job Board" },
   { to: "/courses",   icon: <BookOpen size={18} />,        label: "Course Board" },
-  { to: "/messages",  icon: <Mail size={18} />,            label: "Messages" },
   { to: "/analytics", icon: <LayoutDashboard size={18} />, label: "Analytics Dashboard" },
   { to: "/tracker",   icon: <KanbanSquare size={18} />,    label: "Application Board" },
   { to: "/profile",   icon: <UserCircle size={18} />,      label: "Profile" },

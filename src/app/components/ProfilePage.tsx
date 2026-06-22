@@ -113,7 +113,7 @@ export default function ProfilePage() {
           <div className="h-44 w-full relative">
             <img
               src={
-                "https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
+                "https://ui-avatars.com/api/?name=${profile.name}"
               }
               alt="cover"
               className="w-full h-full object-cover"
