@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { JobDetails, JobResponseDTO, recommendJobs, getAllJobs } from '../../api/jobService';
+import { useNavigate } from "react-router";
 
 const API_BASE = 'http://localhost:8080';
 
@@ -31,6 +32,7 @@ function SkeletonCard() {
 }
 
 function JobCard({ job }: { job: JobDetails }) {
+    const navigate = useNavigate();
   const jobParam = encodeURIComponent(
     JSON.stringify({ title: job.title, company: job.companyName, tags: job.extensions, description: job.description })
   );
@@ -85,14 +87,26 @@ function JobCard({ job }: { job: JobDetails }) {
         className="flex gap-2 mt-auto overflow-x-auto pb-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} 
       >
-        <Link
-          to={`/interview?job=${jobParam}`}
-          className="shrink-0 px-3 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center gap-1.5
-            border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-400
-            hover:bg-violet-50 dark:hover:bg-violet-900/20"
-        >
-          Interview
-        </Link>
+       <button
+         type="button"
+         onClick={(e) => {
+           e.stopPropagation();
+           e.preventDefault();
+           // Store in sessionStorage as backup
+           sessionStorage.setItem('interviewJobDescription', job.description);
+           // Navigate to /interview (which maps to InterviewSelectPage)
+           navigate("/interview", {
+             state: { jobDescription: job.description },
+           });
+         }}
+         className="shrink-0 px-3 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center
+          border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-400
+          hover:bg-violet-50 dark:hover:bg-violet-900/20"
+       >
+         Interview
+       </button>
+
+
         {job.applyOptions?.map(option => (
           <a
             key={option.title}
