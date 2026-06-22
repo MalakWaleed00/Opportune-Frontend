@@ -8,12 +8,12 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 const COURSES = [
-  { id: 1, title: "React – The Complete Guide (incl. React Router & Redux)", description: "Dive deep into React, hooks, context, and modern patterns used in production apps.", platform: "Udemy",    skills: ["React", "Redux", "Hooks"],          basedOn: "Senior Frontend Developer" },
-  { id: 2, title: "TypeScript for Professionals",                             description: "Master TypeScript from basics to advanced generics, decorators, and strict typing.",  platform: "Udemy",    skills: ["TypeScript", "JavaScript"],          basedOn: "Senior Frontend Developer" },
+  { id: 1, title: "React – The Complete Guide (incl. React Router & Redux)", description: "Dive deep into React, hooks, context, and modern patterns used in production apps.", platform: "Udemy",    skills: ["React", "Redux", "Hooks"],          basedOn: "Senior Software Engineer" },
+  { id: 2, title: "TypeScript for Professionals",                             description: "Master TypeScript from basics to advanced generics, decorators, and strict typing.",  platform: "Udemy",    skills: ["TypeScript", "JavaScript"],          basedOn: "Senior Software Engineer" },
   { id: 3, title: "Node.js, Express, MongoDB & More: The Complete Bootcamp",  description: "Build fast, scalable back-end apps with Node, REST APIs, and MongoDB.",              platform: "Udemy",    skills: ["Node.js", "MongoDB", "REST API"],    basedOn: "React Developer"           },
   { id: 4, title: "AWS Certified Developer – Associate",                      description: "Prepare for the AWS Developer certification with hands-on labs.",                     platform: "Coursera", skills: ["AWS", "Cloud", "DevOps"],            basedOn: "Full Stack Engineer"       },
   { id: 5, title: "Python for Everybody Specialization",                      description: "Learn Python programming, data structures, and web scraping from U of Michigan.",     platform: "Coursera", skills: ["Python", "Data Structures"],         basedOn: "Full Stack Engineer"       },
-  { id: 6, title: "Tailwind CSS from Scratch",                                description: "Build modern, responsive UIs quickly with Tailwind CSS utility classes.",              platform: "Pluralsight", skills: ["Tailwind CSS", "CSS", "UI"],       basedOn: "Senior Frontend Developer" },
+  { id: 6, title: "Tailwind CSS from Scratch",                                description: "Build modern, responsive UIs quickly with Tailwind CSS utility classes.",              platform: "Pluralsight", skills: ["Tailwind CSS", "CSS", "UI"],       basedOn: "Senior Software Engineer" },
 ];
 
 const grouped = COURSES.reduce<Record<string, typeof COURSES>>((acc, c) => {
