@@ -1,93 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart2, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
+import {
+  getMyApplications,
+  createApplication,
+  updateApplicationStatus,
+} from '../../api/applicationService';
+import type { Application, AppStatus } from '../../api/applicationService';
 
-export type AppStatus = 'Applied' | 'Interview Scheduled' | 'Interview Done' | 'Offer Received' | 'Offer Accepted' | 'Rejected' | 'Withdrawn';
-
-interface Application {
-  id: string;
-  jobTitle: string;
-  company: string;
-  logo: string;
-  location: string;
-  salary: string;
-  appliedDate: string;
-  status: AppStatus;
-  notes: string;
-}
-
-const INITIAL_APPS: Application[] = [
-  { id: '1', jobTitle: 'Senior Frontend Developer', company: 'TechCorp Inc.', logo: '🚀', location: 'San Francisco, CA', salary: '$120k–$150k', appliedDate: 'Feb 10, 2025', status: 'Interview Done', notes: 'Had a great call with the engineering lead.' },
-  { id: '2', jobTitle: 'React Developer', company: 'StartupXYZ', logo: '💡', location: 'Remote', salary: '$100k–$130k', appliedDate: 'Feb 14, 2025', status: 'Offer Received', notes: 'Offer letter received. Evaluating.' },
-  { id: '3', jobTitle: 'Full Stack Engineer', company: 'InnovateLabs', logo: '🎯', location: 'New York, NY', salary: '$110k–$140k', appliedDate: 'Feb 18, 2025', status: 'Applied', notes: 'Add notes...' },
-];
+export type { AppStatus };
 
 const STATUS_COLORS: Record<AppStatus, { dot: string; bg: string; text: string; border: string }> = {
-  'Applied': { dot: 'bg-sky-500', bg: 'bg-sky-500/15', text: 'text-sky-500', border: 'border-sky-500/25' },
-  'Interview Scheduled': { dot: 'bg-violet-500', bg: 'bg-violet-500/15', text: 'text-violet-500', border: 'border-violet-500/25' },
-  'Interview Done': { dot: 'bg-indigo-500', bg: 'bg-indigo-500/15', text: 'text-indigo-500', border: 'border-indigo-500/25' },
-  'Offer Received': { dot: 'bg-amber-500', bg: 'bg-amber-500/15', text: 'text-amber-500', border: 'border-amber-500/25' },
-  'Offer Accepted': { dot: 'bg-emerald-500', bg: 'bg-emerald-500/15', text: 'text-emerald-500', border: 'border-emerald-500/25' },
-  'Rejected': { dot: 'bg-rose-500', bg: 'bg-rose-500/15', text: 'text-rose-500', border: 'border-rose-500/25' },
-  'Withdrawn': { dot: 'bg-slate-500', bg: 'bg-slate-500/15', text: 'text-slate-500', border: 'border-slate-500/25' },
+  'Applied':             { dot: 'bg-sky-500',     bg: 'bg-sky-500/15',     text: 'text-sky-500',     border: 'border-sky-500/25' },
+  'Interview Scheduled': { dot: 'bg-violet-500',  bg: 'bg-violet-500/15',  text: 'text-violet-500',  border: 'border-violet-500/25' },
+  'Interview Done':      { dot: 'bg-indigo-500',  bg: 'bg-indigo-500/15',  text: 'text-indigo-500',  border: 'border-indigo-500/25' },
+  'Offer Received':      { dot: 'bg-amber-500',   bg: 'bg-amber-500/15',   text: 'text-amber-500',   border: 'border-amber-500/25' },
+  'Offer Accepted':      { dot: 'bg-emerald-500', bg: 'bg-emerald-500/15', text: 'text-emerald-500', border: 'border-emerald-500/25' },
+  'Rejected':            { dot: 'bg-rose-500',    bg: 'bg-rose-500/15',    text: 'text-rose-500',    border: 'border-rose-500/25' },
+  'Withdrawn':           { dot: 'bg-slate-500',   bg: 'bg-slate-500/15',   text: 'text-slate-500',   border: 'border-slate-500/25' },
 };
 
-
 export function ApplicationTrackerPage() {
-  // Sync state with local storage so Analytics page can read it
-  const [apps, setApps] = useState<Application[]>(() => {
-    const saved = localStorage.getItem('opportune_applications');
-    return saved ? JSON.parse(saved) : INITIAL_APPS;
-  });
+  const [apps, setApps]       = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const [filter, setFilter]   = useState<AppStatus | 'All'>('All');
 
-  // Whenever 'apps' changes, save it to local storage
-  useEffect(() => {
-    localStorage.setItem('opportune_applications', JSON.stringify(apps));
-  }, [apps]);
-
-  const [filter, setFilter] = useState<AppStatus | 'All'>('All');
-  
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalError, setModalError]   = useState<string | null>(null);
+  const [submitting, setSubmitting]   = useState(false);
   const [newApp, setNewApp] = useState<Partial<Application>>({
-    jobTitle: '', company: '', location: '', salary: '', status: 'Applied', notes: ''
+    jobTitle: '', company: '', location: '', salary: '', status: 'Applied', notes: '',
   });
 
-  // Calculate Stats
-  const activeCount = apps.filter(a => !['Rejected', 'Withdrawn'].includes(a.status)).length;
+  const load = () => {
+    setLoading(true);
+    setError(null);
+    getMyApplications()
+      .then(setApps)
+      .catch(() => setError("Could not load applications. Make sure the backend is running and you are logged in."))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const activeCount    = apps.filter(a => !['Rejected', 'Withdrawn'].includes(a.status)).length;
   const interviewCount = apps.filter(a => ['Interview Scheduled', 'Interview Done'].includes(a.status)).length;
-  const offerCount = apps.filter(a => ['Offer Received', 'Offer Accepted'].includes(a.status)).length;
-  const rejectedCount = apps.filter(a => a.status === 'Rejected').length;
+  const offerCount     = apps.filter(a => ['Offer Received', 'Offer Accepted'].includes(a.status)).length;
+  const rejectedCount  = apps.filter(a => a.status === 'Rejected').length;
 
   const filteredApps = filter === 'All' ? apps : apps.filter(a => a.status === filter);
 
-  // Handlers
-  const handleStatusChange = (id: string, newStatus: AppStatus) => {
-    setApps(apps.map(app => app.id === id ? { ...app, status: newStatus } : app));
+  const handleStatusChange = async (id: string, newStatus: AppStatus) => {
+    setApps(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
+    try {
+      await updateApplicationStatus(id, newStatus);
+    } catch {
+      load();
+    }
   };
 
-  const handleAddApplication = (e: React.FormEvent) => {
+  const handleAddApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    const application: Application = {
-      id: Date.now().toString(),
-      jobTitle: newApp.jobTitle || 'Unknown Title',
-      company: newApp.company || 'Unknown Company',
-      location: newApp.location || 'Remote',
-      salary: newApp.salary || 'N/A',
-      status: (newApp.status as AppStatus) || 'Applied',
-      notes: newApp.notes || '',
-      logo: '💼', 
-      appliedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    };
-    
-    setApps([application, ...apps]); 
-    setIsModalOpen(false); 
-    setNewApp({ jobTitle: '', company: '', location: '', salary: '', status: 'Applied', notes: '' }); 
+    setSubmitting(true);
+    setModalError(null);
+    try {
+      const created = await createApplication({
+        jobTitle:  newApp.jobTitle  || 'Unknown Title',
+        company:   newApp.company   || 'Unknown Company',
+        location:  newApp.location  || 'Remote',
+        salary:    newApp.salary    || 'N/A',
+        status:    (newApp.status as AppStatus) || 'Applied',
+        notes:     newApp.notes     || '',
+      });
+      setApps(prev => [created, ...prev]);
+      setIsModalOpen(false);
+      setNewApp({ jobTitle: '', company: '', location: '', salary: '', status: 'Applied', notes: '' });
+    } catch {
+      setModalError('Failed to add application. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] flex items-center justify-center">
+      <p className="text-gray-400 text-sm">Loading applications…</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] flex flex-col items-center justify-center gap-4 px-6">
+      <p className="text-red-500 text-sm text-center">{error}</p>
+      <button onClick={load} className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-medium rounded-lg hover:opacity-80 transition-opacity">
+        Retry
+      </button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] transition-colors duration-300 relative">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -95,13 +108,12 @@ export function ApplicationTrackerPage() {
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{apps.length} applications · {activeCount} active</p>
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={() => setIsModalOpen(true)}
+            <button
+              onClick={() => { setIsModalOpen(true); setModalError(null); }}
               className="flex items-center gap-2 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-full px-4 py-2 text-sm font-semibold hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors"
             >
               <Plus size={16} /> Add Application
             </button>
-            
           </div>
         </div>
 
@@ -145,7 +157,7 @@ export function ApplicationTrackerPage() {
           ))}
         </div>
 
-        {/* Table / List */}
+        {/* Table */}
         <div className="bg-white dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-700/60 rounded-2xl overflow-hidden shadow-sm">
           <div className="grid grid-cols-12 gap-4 p-4 border-b border-gray-200 dark:border-gray-800 text-sm font-semibold text-slate-500 dark:text-slate-400">
             <div className="col-span-4">Job</div>
@@ -154,7 +166,7 @@ export function ApplicationTrackerPage() {
             <div className="col-span-2">Status</div>
             <div className="col-span-2">Notes</div>
           </div>
-          
+
           <div className="divide-y divide-gray-100 dark:divide-gray-800/50">
             {filteredApps.map(app => (
               <div key={app.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
@@ -162,24 +174,21 @@ export function ApplicationTrackerPage() {
                   <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{app.jobTitle}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{app.company}</p>
                 </div>
-                
                 <div className="col-span-2">
                   <p className="text-sm text-gray-700 dark:text-gray-300">{app.location}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-500">{app.salary}</p>
                 </div>
-                
                 <div className="col-span-2">
                   <p className="text-sm text-gray-700 dark:text-gray-300">{app.appliedDate}</p>
                 </div>
-                
                 <div className="col-span-2">
                   <div className="relative group">
                     <div className={`inline-flex items-center gap-1.5 text-xs font-semibold mb-1 ${STATUS_COLORS[app.status].text}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[app.status].dot}`} />
                       {app.status}
                     </div>
-                    <select 
-                      value={app.status} 
+                    <select
+                      value={app.status}
                       onChange={(e) => handleStatusChange(app.id, e.target.value as AppStatus)}
                       aria-label={`Update status for ${app.jobTitle}`}
                       className="block w-full text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded p-1 text-gray-700 dark:text-gray-300 outline-none focus:border-gray-500 dark:focus:border-white"
@@ -188,7 +197,6 @@ export function ApplicationTrackerPage() {
                     </select>
                   </div>
                 </div>
-                
                 <div className="col-span-2">
                   <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 italic">{app.notes || 'No notes...'}</p>
                 </div>
@@ -214,13 +222,17 @@ export function ApplicationTrackerPage() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleAddApplication} className="p-5 space-y-4">
+              {modalError && (
+                <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{modalError}</p>
+              )}
+
               <div>
                 <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Job Title</label>
                 <input required type="text" value={newApp.jobTitle} onChange={e => setNewApp({...newApp, jobTitle: e.target.value})} className="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-slate-500" placeholder="e.g. Frontend Developer" />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Company</label>
@@ -252,13 +264,14 @@ export function ApplicationTrackerPage() {
 
               <div className="pt-4 flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Cancel</button>
-                <button type="submit" className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">Save Application</button>
+                <button type="submit" disabled={submitting} className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors">
+                  {submitting ? 'Saving…' : 'Save Application'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }

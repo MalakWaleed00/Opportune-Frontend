@@ -3,8 +3,19 @@ import { useNavigate, useLocation } from 'react-router';
 import { X, Plus, ChevronLeft } from 'lucide-react';
 import { createJob, updateJob, JobPostRequest, JobPost } from '../../../api/recruiterService';
 
-const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship'];
-const EXP_LEVELS = ['Entry Level', 'Mid Level', 'Senior Level', 'Expert'];
+const JOB_TYPES = [
+  { value: 'FULL_TIME',  label: 'Full-time' },
+  { value: 'PART_TIME',  label: 'Part-time' },
+  { value: 'CONTRACT',   label: 'Contract' },
+  { value: 'REMOTE',     label: 'Remote' },
+  { value: 'INTERNSHIP', label: 'Internship' },
+];
+const EXP_LEVELS = [
+  { value: 'ENTRY_LEVEL',  label: 'Entry Level' },
+  { value: 'MID_LEVEL',    label: 'Mid Level' },
+  { value: 'SENIOR_LEVEL', label: 'Senior Level' },
+  { value: 'EXPERT',       label: 'Expert' },
+];
 
 export function PostJobPage() {
   const navigate = useNavigate();
@@ -17,8 +28,8 @@ export function PostJobPage() {
     title: editJob?.title ?? '',
     companyName: editJob?.companyName ?? (user.company ?? ''),
     location: editJob?.location ?? '',
-    jobType: editJob?.jobType ?? 'Full-time',
-    experienceLevel: editJob?.experienceLevel ?? 'Mid Level',
+    jobType: editJob?.jobType ?? 'FULL_TIME',
+    experienceLevel: editJob?.experienceLevel ?? 'MID_LEVEL',
     salaryRange: editJob?.salaryRange ?? '',
     description: editJob?.description ?? '',
     skills: editJob?.skills ?? [],
@@ -181,13 +192,13 @@ export function PostJobPage() {
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Job Type</label>
                 <select name="jobType" value={form.jobType} onChange={handleChange} className={inputCls}>
-                  {JOB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  {JOB_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Experience Level</label>
                 <select name="experienceLevel" value={form.experienceLevel} onChange={handleChange} className={inputCls}>
-                  {EXP_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                  {EXP_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
               </div>
               <div>

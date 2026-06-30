@@ -1,4 +1,10 @@
-const STORAGE_KEY = "opportune_recruiter_jobs";
+import axios from "axios";
+
+const API = "http://localhost:8080/api";
+
+const authCfg = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem("token") ?? ""}` },
+});
 
 export interface JobPostRequest {
   title: string;
@@ -19,55 +25,44 @@ export interface JobPost extends JobPostRequest {
   postedAt: string;
 }
 
-function loadJobs(): JobPost[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveJobs(jobs: JobPost[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-}
-
-function nextId(jobs: JobPost[]): number {
-  return jobs.length > 0 ? Math.max(...jobs.map(j => j.id)) + 1 : 1;
-}
-
-export const createJob = async (data: JobPostRequest): Promise<JobPost> => {
-  const jobs = loadJobs();
-  const newJob: JobPost = {
-    ...data,
-    id: nextId(jobs),
-    status: "ACTIVE",
-    applicationCount: 0,
-    postedAt: new Date().toISOString(),
+function mapJob(raw: any): JobPost {
+  return {
+    id:               raw.id,
+    title:            raw.title            ?? "",
+    companyName:      raw.companyName      ?? raw.company           ?? "",
+    location:         raw.location         ?? "",
+    jobType:          raw.jobType          ?? raw.job_type          ?? "",
+    experienceLevel:  raw.experienceLevel  ?? raw.experience_level  ?? "",
+    salaryRange:      raw.salaryRange      ?? raw.salary            ?? "",
+    description:      raw.description      ?? "",
+    skills:           raw.skills           ?? [],
+    deadline:         raw.deadline         ?? "",
+    status:           raw.status === "CLOSED" ? "CLOSED" : "ACTIVE",
+    applicationCount: raw.applicationCount ?? raw.application_count ?? 0,
+    postedAt:         raw.postedAt         ?? raw.posted_at         ?? new Date().toISOString(),
   };
-  saveJobs([newJob, ...jobs]);
-  return newJob;
-};
+}
 
 export const getMyJobs = async (): Promise<JobPost[]> => {
-  return loadJobs();
+  const { data } = await axios.get(`${API}/recruiter/jobs`, authCfg());
+  return Array.isArray(data) ? data.map(mapJob) : [];
 };
 
-export const updateJob = async (id: number, data: Partial<JobPostRequest>): Promise<JobPost> => {
-  const jobs = loadJobs();
-  const updated = jobs.map(j => j.id === id ? { ...j, ...data } : j);
-  saveJobs(updated);
-  return updated.find(j => j.id === id)!;
+export const createJob = async (req: JobPostRequest): Promise<JobPost> => {
+  const { data } = await axios.post(`${API}/recruiter/jobs`, req, authCfg());
+  return mapJob(data);
+};
+
+export const updateJob = async (id: number, req: Partial<JobPostRequest>): Promise<JobPost> => {
+  const { data } = await axios.put(`${API}/recruiter/jobs/${id}`, req, authCfg());
+  return mapJob(data);
 };
 
 export const deleteJob = async (id: number): Promise<void> => {
-  saveJobs(loadJobs().filter(j => j.id !== id));
+  await axios.delete(`${API}/recruiter/jobs/${id}`, authCfg());
 };
 
 export const toggleJobStatus = async (id: number): Promise<JobPost> => {
-  const jobs = loadJobs();
-  const updated = jobs.map(j =>
-    j.id === id ? { ...j, status: j.status === "ACTIVE" ? "CLOSED" as const : "ACTIVE" as const } : j
-  );
-  saveJobs(updated);
-  return updated.find(j => j.id === id)!;
+  const { data } = await axios.put(`${API}/recruiter/jobs/${id}/toggle-status`, {}, authCfg());
+  return mapJob(data);
 };
