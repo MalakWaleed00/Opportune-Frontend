@@ -5,30 +5,16 @@ import { login } from "../../api/authService";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
-  const [errors, setErrors] = useState({
-    email: '',
-    password: '',
-  });
-
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [uploadingCv, setUploadingCv] = useState(false);
-  const validateForm = () => {
-    const newErrors = {
-      email: '',
-      password: '',
-    };
 
+  const validateForm = () => {
+    const newErrors = { email: '', password: '' };
     let isValid = true;
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
@@ -38,7 +24,6 @@ export function LoginPage() {
       isValid = false;
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
       isValid = false;
@@ -47,43 +32,12 @@ export function LoginPage() {
     setErrors(newErrors);
     return isValid;
   };
-  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    setCvFile(file);
-  };
-
-  const uploadCvAfterLogin = async (file: File, token: string, userId: number) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const user2 = JSON.parse(localStorage.getItem("user") || "{}");
-     const response = await fetch(
-    `http://localhost:8080/api/cv/parse?userId=${user2.id}`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
-
-
-    if (!response.ok) throw new Error("CV upload failed");
-
-    return await response.text();
-  };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: '',
-      }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -95,12 +49,8 @@ export function LoginPage() {
       const res = await login(formData);
       const data = res?.data ?? res;
 
-      const token =
-        data.token || data.accessToken || data.jwt || data.authToken;
-
+      const token = data.token || data.accessToken || data.jwt || data.authToken;
       if (!token) throw new Error("Invalid login response");
-
-      localStorage.setItem("token", token);
 
       const user = {
         id: data.id,
@@ -114,37 +64,15 @@ export function LoginPage() {
         skills: data.skills ?? [],
       };
 
-      if (cvFile) {
-        try {
-          setUploadingCv(true);
-
-          const message = await uploadCvAfterLogin(
-            cvFile,
-            token,
-            data.id
-          );
-
-          console.log(message);
-
-        } catch (err) {
-          console.error("CV upload failed:", err);
-        } finally {
-          setUploadingCv(false);
-        }
-      }
-
-
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
       setIsSubmitted(true);
-
       setTimeout(() => {
-        navigate("/jobs");
+        navigate(user.role === "RECRUITER" ? "/recruiter/dashboard" : "/jobs");
       }, 1000);
 
     } catch (error: any) {
-      console.error("Login failed:", error);
-
       setErrors({
         email: "",
         password:
@@ -155,31 +83,18 @@ export function LoginPage() {
     }
   };
 
-
   if (isSubmitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md text-center">
           <div className="bg-card rounded-lg p-8 border border-border shadow-sm">
             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-primary-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
+              <svg className="w-8 h-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <h1 className="mb-2 text-black">Welcome back</h1>
-            <p className="text-foreground">
-              You have successfully logged in.
-            </p>
+            <p className="text-foreground">You have successfully logged in.</p>
           </div>
         </div>
       </div>
@@ -192,53 +107,33 @@ export function LoginPage() {
         <div className="bg-card rounded-lg p-8 border border-border shadow-sm">
           <div className="mb-8 text-center">
             <h1 className="mb-2 !text-black">Welcome back</h1>
-            <p className="text-muted-foreground">
-              Enter your credentials to access your account
-            </p>
+            <p className="text-muted-foreground">Enter your credentials to access your account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block mb-2 text-foreground">
-                Email
-              </label>
+              <label htmlFor="email" className="block mb-2 text-foreground">Email</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${errors.email ? 'border-destructive' : 'border-border'
-                  } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
+                type="email" id="email" name="email"
+                value={formData.email} onChange={handleChange}
+                className={`w-full px-4 py-2.5 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${errors.email ? 'border-destructive' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
                 placeholder="you@example.com"
               />
-              {errors.email && (
-                <p className="mt-1.5 text-destructive text-sm">{errors.email}</p>
-              )}
+              {errors.email && <p className="mt-1.5 text-destructive text-sm">{errors.email}</p>}
             </div>
 
-            {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="text-foreground">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
+                <label htmlFor="password" className="text-foreground">Password</label>
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2.5 pr-11 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${errors.password ? 'border-destructive' : 'border-border'
-                    } focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
+                  type={showPassword ? 'text' : 'password'} id="password" name="password"
+                  value={formData.password} onChange={handleChange}
+                  className={`w-full px-4 py-2.5 pr-11 rounded-lg bg-input-background border text-foreground placeholder-muted-foreground/50 ${errors.password ? 'border-destructive' : 'border-border'} focus:outline-none focus:ring-2 focus:ring-ring transition-colors`}
                   placeholder="••••••••"
                 />
                 <button
@@ -248,12 +143,10 @@ export function LoginPage() {
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    // Eye-off icon
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                     </svg>
                   ) : (
-                    // Eye icon
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -261,54 +154,18 @@ export function LoginPage() {
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1.5 text-destructive text-sm">{errors.password}</p>
-              )}
+              {errors.password && <p className="mt-1.5 text-destructive text-sm">{errors.password}</p>}
             </div>
-            <div>
-              <label className="block mb-2 text-foreground">
-                Upload CV (Optional)
-              </label>
 
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleCvUpload}
-                className="w-full px-4 py-2.5 bg-input-background border border-border rounded-lg text-foreground
-    file:mr-4 file:py-2 file:px-4
-    file:rounded-md file:border-0
-    file:bg-primary file:text-primary-foreground
-    hover:file:opacity-90
-    focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-
-              {cvFile && (
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Selected: {cvFile.name}
-                </p>
-              )}
-
-              {uploadingCv && (
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Uploading CV...
-                </p>
-              )}
-            </div>
-            {/* Remember Me */}
             <div className="flex items-center">
               <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                type="checkbox" id="rememberMe"
+                checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-border bg-input-background focus:ring-2 focus:ring-ring"
               />
-              <label htmlFor="rememberMe" className="ml-2 text-foreground cursor-pointer">
-                Remember me
-              </label>
+              <label htmlFor="rememberMe" className="ml-2 text-foreground cursor-pointer">Remember me</label>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg hover:opacity-90 transition-opacity"
@@ -317,15 +174,9 @@ export function LoginPage() {
             </button>
           </form>
 
-          {/* Sign Up Link */}
           <p className="mt-6 text-center text-muted-foreground">
             Don't have an account?{' '}
-            <Link
-              to="/signup"
-              className="text-primary hover:underline"
-            >
-              Sign up
-            </Link>
+            <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
           </p>
         </div>
       </div>

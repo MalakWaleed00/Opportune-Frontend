@@ -1,18 +1,32 @@
 import React from "react";
 import { NavLink } from "react-router";
-import { Briefcase, BookOpen, UserCircle, Mail, LayoutDashboard, KanbanSquare, Settings } from "lucide-react";
+import {
+  Briefcase, BookOpen, UserCircle, LayoutDashboard,
+  KanbanSquare, Settings, PlusSquare, ClipboardList,
+} from "lucide-react";
 
-const links = [
-  
+const jobseekerLinks = [
   { to: "/jobs",      icon: <Briefcase size={18} />,       label: "Job Board" },
   { to: "/courses",   icon: <BookOpen size={18} />,        label: "Course Board" },
-  { to: "/analytics", icon: <LayoutDashboard size={18} />, label: "Analytics Dashboard" },
+  { to: "/analytics", icon: <LayoutDashboard size={18} />, label: "Analytics" },
   { to: "/tracker",   icon: <KanbanSquare size={18} />,    label: "Application Board" },
   { to: "/profile",   icon: <UserCircle size={18} />,      label: "Profile" },
   { to: "/settings",  icon: <Settings size={18} />,        label: "Settings" },
 ];
 
+const recruiterLinks = [
+  { to: "/recruiter/dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard" },
+  { to: "/recruiter/jobs",      icon: <ClipboardList size={18} />,   label: "My Jobs" },
+  { to: "/recruiter/post-job",  icon: <PlusSquare size={18} />,      label: "Post a Job" },
+  { to: "/recruiter/profile",   icon: <UserCircle size={18} />,      label: "Profile" },
+  { to: "/settings",            icon: <Settings size={18} />,        label: "Settings" },
+];
+
 export function Sidebar() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isRecruiter = user.role === "RECRUITER";
+  const links = isRecruiter ? recruiterLinks : jobseekerLinks;
+
   return (
     <aside className="
       h-screen w-56 fixed left-0 top-0 z-40 flex flex-col pt-6
@@ -24,6 +38,11 @@ export function Sidebar() {
         <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
           Opportune
         </span>
+        {isRecruiter && (
+          <p className="text-xs text-violet-500 dark:text-violet-400 font-medium mt-0.5">
+            Recruiter
+          </p>
+        )}
       </div>
 
       <nav className="flex flex-col gap-1 px-3 flex-1">

@@ -15,6 +15,8 @@ export function SignUpPage() {
     profilePicture: "",
     skills: [] as string[],
     experience: "",
+    bio: "",
+    company: "",
   });
 
   const [errors, setErrors] = useState({
@@ -25,9 +27,11 @@ export function SignUpPage() {
     country: "",
     skills: "",
     experience: "",
+    company: "",
   });
   const [skillInput, setSkillInput] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [apiError, setApiError] = useState("");
   const countries = [
     "Egypt",
     "United States",
@@ -63,6 +67,7 @@ export function SignUpPage() {
       country: "",
       skills: "",
       experience: "",
+      company: "",
     };
 
     let isValid = true;
@@ -99,14 +104,20 @@ export function SignUpPage() {
       isValid = false;
     }
 
-    if (formData.skills.length === 0) {
-      newErrors.skills = "Please add at least one skill";
-      isValid = false;
-    }
-
-    if (!formData.experience) {
-      newErrors.experience = "Experience level is required";
-      isValid = false;
+    if (formData.userType === "recruiter") {
+      if (!formData.company.trim()) {
+        newErrors.company = "Company name is required";
+        isValid = false;
+      }
+    } else {
+      if (formData.skills.length === 0) {
+        newErrors.skills = "Please add at least one skill";
+        isValid = false;
+      }
+      if (!formData.experience) {
+        newErrors.experience = "Experience level is required";
+        isValid = false;
+      }
     }
 
     setErrors(newErrors);
@@ -168,19 +179,30 @@ export function SignUpPage() {
     if (!validateForm()) return;
 
     try {
+      const isRecruiter = formData.userType === "recruiter";
+
       const request = {
         username: formData.username,
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.userType === "jobseeker" ? "JOBSEEKER" : "RECRUITER",
+        role: isRecruiter ? "RECRUITER" : "JOBSEEKER",
         country: formData.country,
         profilePicLink: formData.profilePicture,
-        skills: formData.skills,
-        experienceLevel: formData.experience,
+        skills: isRecruiter ? [] : formData.skills,
+        experienceLevel: isRecruiter ? "" : formData.experience,
       };
 
       await register(request);
+
+      if (isRecruiter) {
+        const stored = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem("user", JSON.stringify({
+          ...stored,
+          company: formData.company,
+          bio: formData.bio,
+        }));
+      }
 
       setIsSubmitted(true);
 
@@ -189,8 +211,12 @@ export function SignUpPage() {
       }, 1500);
 
     } catch (error: any) {
-      console.error(error);
-      alert(error?.response?.data?.message || "Signup failed");
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data ||
+        error?.message ||
+        "Signup failed. Please try again.";
+      setApiError(typeof msg === "string" ? msg : JSON.stringify(msg));
     }
   };
 
@@ -449,109 +475,150 @@ export function SignUpPage() {
               />
             </div>
 
-            {/* Skills Field */}
-            <div>
-              <label
-                htmlFor="skillInput"
-                className="block mb-2 text-black dark:text-gray-200 font-medium"
-              >
-                Skills
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  id="skillInput"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={handleSkillKeyDown}
-                  className={`flex-1 px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.skills
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
+            {/* Recruiter fields: Company + Bio */}
+            {formData.userType === "recruiter" ? (
+              <>
+                <div>
+                  <label
+                    htmlFor="company"
+                    className="block mb-2 text-black dark:text-gray-200 font-medium"
+                  >
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    id="company"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
+                      errors.company ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                     } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
-                  placeholder="e.g., JavaScript, React, Node.js"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddSkill}
-                  className="px-4 py-2.5 bg-black text-white dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors font-medium"
-                >
-                  Add
-                </button>
-              </div>
-              {formData.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {formData.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-black dark:text-white rounded-full text-sm font-medium"
-                    >
-                      {skill}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSkill(skill)}
-                        className="hover:text-red-500 transition-colors"
-                        aria-label={`Remove skill ${skill}`}
-                        title={`Remove skill ${skill}`}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </span>
-                  ))}
+                    placeholder="e.g. Acme Corp"
+                  />
+                  {errors.company && (
+                    <p className="mt-1.5 text-red-500 text-sm">{errors.company}</p>
+                  )}
                 </div>
-              )}
-              {errors.skills && (
-                <p className="mt-1.5 text-red-500 text-sm">{errors.skills}</p>
-              )}
-            </div>
 
-            {/* Experience Level */}
-            <div>
-              <label
-                htmlFor="experience"
-                className="block mb-2 text-black dark:text-gray-200 font-medium"
-              >
-                Experience Level
-              </label>
-              <select
-                id="experience"
-                name="experience"
-                value={formData.experience}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${errors.experience
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-600"
-                  } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
-              >
-                <option value="">Select experience level</option>
-                {experienceLevels.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
-              {errors.experience && (
-                <p className="mt-1.5 text-red-500 text-sm">
-                  {errors.experience}
-                </p>
-              )}
-            </div>
+                <div>
+                  <label
+                    htmlFor="bio"
+                    className="block mb-2 text-black dark:text-gray-200 font-medium"
+                  >
+                    Bio <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, bio: e.target.value }))
+                    }
+                    rows={3}
+                    className="w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors resize-none"
+                    placeholder="Tell candidates a bit about yourself or your company..."
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Jobseeker fields: Skills + Experience */}
+                <div>
+                  <label
+                    htmlFor="skillInput"
+                    className="block mb-2 text-black dark:text-gray-200 font-medium"
+                  >
+                    Skills
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      id="skillInput"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={handleSkillKeyDown}
+                      className={`flex-1 px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
+                        errors.skills ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                      } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                      placeholder="e.g., JavaScript, React, Node.js"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSkill}
+                      className="px-4 py-2.5 bg-black text-white dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {formData.skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-black dark:text-white rounded-full text-sm font-medium"
+                        >
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="hover:text-red-500 transition-colors"
+                            aria-label={`Remove skill ${skill}`}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {errors.skills && (
+                    <p className="mt-1.5 text-red-500 text-sm">{errors.skills}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="experience"
+                    className="block mb-2 text-black dark:text-gray-200 font-medium"
+                  >
+                    Experience Level
+                  </label>
+                  <select
+                    id="experience"
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-black dark:text-white border ${
+                      errors.experience ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                    } focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-400 transition-colors`}
+                  >
+                    <option value="">Select experience level</option>
+                    {experienceLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.experience && (
+                    <p className="mt-1.5 text-red-500 text-sm">{errors.experience}</p>
+                  )}
+                </div>
+              </>
+            )}
+
+
+            {apiError && (
+              <div className="px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
+                {apiError}
+              </div>
+            )}
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-black text-white dark:bg-white dark:text-black font-semibold py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors mt-6"
+              className="w-full bg-black text-white dark:bg-white dark:text-black font-semibold py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors mt-2"
             >
               Sign Up
             </button>

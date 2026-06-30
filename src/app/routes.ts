@@ -14,6 +14,10 @@ import { ApplicationTrackerPage } from "./components/Applicationtrackerpage";
 import { AnalyticsDashboardpage } from "./components/Analyticsdashboardpage";
 import { SettingsPage } from "./components/SettingsPage";
 import InterviewMcqPage from "./components/InterviewMcqPage";
+import { RecruiterDashboardPage } from "./components/recruiter/RecruiterDashboardPage";
+import { PostJobPage } from "./components/recruiter/PostJobPage";
+import { RecruiterJobsPage } from "./components/recruiter/RecruiterJobsPage";
+import { RecruiterProfilePage } from "./components/recruiter/RecruiterProfilePage";
 
 
 export const router = createBrowserRouter([
@@ -32,16 +36,22 @@ export const router = createBrowserRouter([
   {
     Component: Layout,
     children: [
+      // Jobseeker routes
       { path: "/jobs",            Component: JobsPage },
       { path: "/courses",         Component: CourseRecommendationPage },
       { path: "/interview",       Component: InterviewSelectPage },
       { path: "/interview/quiz",  Component: InterviewQuizPage },
-      { path: "/interview/mcq", Component: InterviewMcqPage },
+      { path: "/interview/mcq",   Component: InterviewMcqPage },
       { path: "/profile",         Component: ProfilePage },
       { path: "/messages",        Component: MessagesPage },
       { path: "/tracker",         Component: ApplicationTrackerPage },
       { path: "/analytics",       Component: AnalyticsDashboardpage },
       { path: "/settings",        Component: SettingsPage },
+      // Recruiter routes
+      { path: "/recruiter/dashboard", Component: RecruiterDashboardPage },
+      { path: "/recruiter/jobs",      Component: RecruiterJobsPage },
+      { path: "/recruiter/post-job",  Component: PostJobPage },
+      { path: "/recruiter/profile",   Component: RecruiterProfilePage },
     ],
   },
 ]);

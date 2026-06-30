@@ -50,61 +50,107 @@ type Profile = {
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const stored = localStorage.getItem("user");
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("token");
 
-        if (!stored) {
-          console.error("No user in localStorage");
-          return;
+  const fetchProfile = async () => {
+    try {
+      if (!storedUser?.id) return;
+      const res = await fetch(`http://localhost:8080/api/cv?userId=${storedUser.id}`);
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
+      setProfile({
+        name: data.name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        experience_level: data.experience_level || "",
+        skills: data.skills || [],
+        education: data.education || [],
+        jobs: data.jobs || [],
+        projects: data.projects || [],
+        internships: data.internships || [],
+      });
+    } catch (err) {
+      console.error("Profile fetch error:", err);
+    }
+  };
+
+  useEffect(() => { fetchProfile(); }, []);
+
+  const handleUpload = async () => {
+    if (!cvFile || !storedUser?.id) return;
+    setUploading(true);
+    setUploadMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", cvFile);
+      const res = await fetch(
+        `http://localhost:8080/api/cv/parse?userId=${storedUser.id}`,
+        {
+          method: "POST",
+          body: fd,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
-
-        const user = JSON.parse(stored);
-        console.log("userrr", user)
-        if (!user.id) {
-          console.error("User id is missing");
-          return;
-        }
-
-        const res = await fetch(`http://localhost:8080/api/cv?userId=${user.id}`);
-
-        if (!res.ok) throw new Error("Failed to fetch profile");
-
-        const data = await res.json();
-
-        setProfile({
-          name: data.name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          experience_level: data.experience_level || "",
-          skills: data.skills || [],
-          education: data.education || [],
-          jobs: data.jobs || [],
-          projects: data.projects || [],
-          internships: data.internships || [],
-        });
-
-      } catch (err) {
-        console.error("Profile fetch error:", err);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Loading profile...
-      </div>
-    );
-  }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      setUploadMsg({ type: "success", text: "CV uploaded! Refreshing profile..." });
+      setCvFile(null);
+      setTimeout(() => { fetchProfile(); setUploadMsg(null); }, 1500);
+    } catch (err: any) {
+      setUploadMsg({ type: "error", text: err?.message || "Upload failed. Try again." });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-white p-6">
       <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* CV UPLOAD */}
+        <div className="bg-white dark:bg-[#1a1d27] rounded-xl shadow p-5">
+          <h2 className="font-bold mb-3 flex items-center gap-2 text-sm">
+            <User size={16} /> {profile ? "Update CV" : "Upload Your CV"}
+          </h2>
+          {!profile && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              No CV found. Upload one to populate your profile.
+            </p>
+          )}
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => { setCvFile(e.target.files?.[0] ?? null); setUploadMsg(null); }}
+              className="flex-1 min-w-0 text-sm text-gray-600 dark:text-gray-400
+                file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+                file:bg-black file:text-white dark:file:bg-white dark:file:text-black
+                hover:file:opacity-80 cursor-pointer"
+            />
+            <button
+              onClick={handleUpload}
+              disabled={!cvFile || uploading}
+              className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40 flex-shrink-0"
+            >
+              {uploading ? "Uploading..." : "Upload"}
+            </button>
+          </div>
+          {uploadMsg && (
+            <p className={`mt-2 text-sm ${uploadMsg.type === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
+              {uploadMsg.text}
+            </p>
+          )}
+        </div>
+
+        {!profile ? (
+          <div className="bg-white dark:bg-[#1a1d27] rounded-xl shadow p-12 text-center text-gray-400">
+            Upload your CV above to see your profile.
+          </div>
+        ) : (<>
 
         {/* HEADER WITH COVER + PROFILE PIC */}
         <div className="bg-white dark:bg-[#1a1d27] rounded-xl shadow overflow-hidden">
@@ -232,6 +278,7 @@ export default function ProfilePage() {
           </div>
         </Section>
 
+        </>)}
       </div>
     </div>
   );

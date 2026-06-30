@@ -91,7 +91,7 @@ export function ApplicationTrackerPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Application Tracker</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Application Board</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{apps.length} applications · {activeCount} active</p>
           </div>
           <div className="flex gap-3">

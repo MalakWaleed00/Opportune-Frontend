@@ -25,7 +25,7 @@ export default function CourseRecommendationPage() {
   return (
     <div className="p-8 min-h-screen bg-gray-50 dark:bg-[#0f1117] transition-colors duration-300">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Course Recommendations</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Course Board</h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Based on jobs you recently viewed</p>
       </div>
 
